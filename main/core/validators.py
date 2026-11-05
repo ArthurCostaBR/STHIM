@@ -1,0 +1,29 @@
+from django.core.exceptions import ValidationError
+import re
+
+
+def validate_cpf(cpf: str) -> None:
+    if not cpf:
+        raise ValidationError("CPF cannot be empty", code="empty_cpf")
+
+    if not re.fullmatch(r"[0-9]{11}", cpf) or len(set(cpf)) == 1:
+        raise ValidationError("Invalid CPF", code="invalid_cpf")
+    
+    generated_cpf = _append_verification_digit(cpf[:9])
+    generated_cpf = _append_verification_digit(generated_cpf)
+
+    if generated_cpf != cpf:
+        raise ValidationError("Invalid CPF", code="invalid_cpf")
+
+def _append_verification_digit(partial_cpf: str) -> str:
+        total = 0
+
+        for index, multiplier in enumerate(
+            range(len(partial_cpf) + 1, 1, -1)
+        ):
+            total += int(partial_cpf[index]) * multiplier
+
+        digit = 11 - (total % 11)
+        digit = digit if digit <= 9 else 0
+
+        return f"{partial_cpf}{digit}"
