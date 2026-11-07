@@ -1,11 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STHIM</title>
-</head>
-<body>
-    <h1>STHIM</h1>
-</body>
-</html>
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Início · STHIM{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+
+  <section>
+    <header>
+      <h1>STHIM</h1>
+      <p>Sistema de Transporte Hospitalar Intermunicipal</p>
+    </header>
+
+    <nav aria-label="Menu principal">
+      {% include "core/_menu_items.html" %}
+    </nav>
+
+    <footer>
+      <strong>{{ user.username }}</strong><br>
+      <small>{{ user.get_sector_display }}</small>
+    </footer>
+  </section>
+
+{% endblock %}

@@ -1,5 +1,9 @@
 import re
 
-def cpf_normalizer(cpf: str) -> str:
+def digits_only(value: str) -> str | None:
+    if value:
+        return re.sub(r"[^0-9]", "", value)
+    return value
 
-    return re.sub(r"[^0-9]", "", cpf)
+def cpf_normalizer(value: str) -> str | None:
+    return digits_only(value)

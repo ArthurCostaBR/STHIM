@@ -1,0 +1,57 @@
+{% extends "core/base.html" %}
+
+{% block title %}Pacientes{% endblock %}
+
+{% block content %}
+
+  <section>
+    <h2>{% if editing %}Editar paciente{% else %}Cadastro de pacientes{% endif %}</h2>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {% for field in form %}
+        <div>
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+
+      <button type="submit">
+        {% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}
+      </button>
+      <a href="{% url 'patients:manage' %}">Limpar</a>
+    </form>
+  </section>
+
+  <section>
+    <h2>Gerenciamento de pacientes</h2>
+
+    <form method="get" action="{% url 'patients:manage' %}">
+      <input type="search" name="q" value="{{ q }}" placeholder="Pesquisar paciente">
+      <button type="submit">Buscar</button>
+    </form>
+
+    {% if patients %}
+      <ul>
+        {% for p in patients %}
+          <li>
+            {{ p.name }} | {{ p.cpf }}
+
+            <a href="{% url 'patients:edit' p.pk %}">Editar</a>
+
+            <form method="post" action="{% url 'patients:delete' p.pk %}">
+              {% csrf_token %}
+              <button type="submit">Excluir</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Nenhum paciente encontrado.</p>
+    {% endif %}
+  </section>
+
+{% endblock %}
