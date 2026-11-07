@@ -2,7 +2,6 @@ from django.contrib.auth import login
 from django.shortcuts import redirect, render
 from .forms import LoginForm, SignupForm
 
-
 def signup_view(request):
     form = SignupForm(request.POST or None)
 

@@ -1,19 +1,18 @@
 from django.core.exceptions import ValidationError
 import re
 
-
 def validate_cpf(cpf: str) -> None:
     if not cpf:
-        raise ValidationError("CPF cannot be empty", code="empty_cpf")
+        raise ValidationError("O campo CPF é obrigatório.", code="empty_cpf")
 
     if not re.fullmatch(r"[0-9]{11}", cpf) or len(set(cpf)) == 1:
-        raise ValidationError("Invalid CPF", code="invalid_cpf")
-    
+        raise ValidationError("CPF inválido.", code="invalid_cpf")
+
     generated_cpf = _append_verification_digit(cpf[:9])
     generated_cpf = _append_verification_digit(generated_cpf)
 
     if generated_cpf != cpf:
-        raise ValidationError("Invalid CPF", code="invalid_cpf")
+        raise ValidationError("CPF inválido.", code="invalid_cpf")
 
 def _append_verification_digit(partial_cpf: str) -> str:
         total = 0

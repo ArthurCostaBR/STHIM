@@ -1,10 +1,26 @@
 <ul>
-  <li><a href="{% url 'patients:manage' %}">Cadastro de pacientes e acompanhantes</a></li>
-  <li><a href="#">Agendamento de transporte</a></li>
-  <li><a href="#">Gerenciamento de agendamentos</a></li>
-  <li><a href="#">Rotas fixas</a></li>
-  <li><a href="#">Rotas personalizadas</a></li>
-  <li><a href="#">Gerenciamento de frota</a></li>
-  <li><a href="#">Impressão de relatórios e planilhas de rotas</a></li>
-  <li><a href="#">Auditoria</a></li>
+  {% if "patients" in features %}
+    <li><a href="{% url 'patients:manage' %}">Cadastro de pacientes e acompanhantes</a></li>
+  {% endif %}
+  {% if "schedule_transport" in features %}
+    <li><a href="#">Agendamento de transporte</a></li>
+  {% endif %}
+  {% if "appointments" in features %}
+    <li><a href="#">Gerenciamento de agendamentos</a></li>
+  {% endif %}
+  {% if "fixed_routes" in features %}
+    <li><a href="#">Rotas fixas</a></li>
+  {% endif %}
+  {% if "custom_routes" in features %}
+    <li><a href="#">Rotas personalizadas</a></li>
+  {% endif %}
+  {% if "fleet" in features %}
+    <li><a href="#">Gerenciamento de frota</a></li>
+  {% endif %}
+  {% if "reports" in features or "route_sheets" in features %}
+    <li><a href="#">Impressão de relatórios e planilhas de rotas</a></li>
+  {% endif %}
+  {% if "audit" in features %}
+    <li><a href="#">Auditoria</a></li>
+  {% endif %}
 </ul>

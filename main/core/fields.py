@@ -1,5 +1,5 @@
 from django.db import models
-from .normalizers import cpf_normalizer
+from .normalizers import digits_only
 from .validators import validate_cpf
 
 class CPFField(models.CharField):
@@ -11,7 +11,7 @@ class CPFField(models.CharField):
 
     def to_python(self, value):
         value = super().to_python(value)
-        return cpf_normalizer(value) if value else value
+        return digits_only(value) if value else value
 
     def formfield(self, **kwargs):
         kwargs.setdefault("max_length", 14)

@@ -1,13 +1,13 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from .models import Patient
+from accounts.access import Feature, feature_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from core.normalizers import digits_only
 from .forms import PatientForm
-from .models import Patient
 
-@login_required(login_url="accounts:login")
+@feature_required(Feature.PATIENTS)
 def patient_manage_view(request, pk=None):
     editing = get_object_or_404(Patient, pk=pk) if pk else None
     form = PatientForm(request.POST or None, instance=editing)
@@ -40,7 +40,7 @@ def patient_manage_view(request, pk=None):
     })
 
 
-@login_required(login_url="accounts:login") 
+@feature_required(Feature.PATIENTS)
 @require_POST
 def patient_delete_view(request, pk):
     get_object_or_404(Patient, pk=pk).delete()
