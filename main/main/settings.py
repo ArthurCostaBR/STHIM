@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'accounts',
     'pages',
     'patients',
+    'fleet',
 ]
 
 MIDDLEWARE = [

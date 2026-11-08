@@ -1,0 +1,47 @@
+{% extends "core/base.html" %}
+
+{% block title %}Frota{% endblock %}
+
+{% block content %}
+
+  <section>
+    <h2>{% if editing %}Editar veículo{% else %}Cadastro de veículos{% endif %}</h2>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {% for field in form %}
+        <div>
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+
+      <button type="submit">
+        {% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}
+      </button>
+      <a href="{% url 'fleet:manage' %}">Limpar</a>
+    </form>
+  </section>
+
+  <section>
+    <h2>Gerenciamento de frota</h2>
+
+    {% if vehicles %}
+      <ul>
+        {% for v in vehicles %}
+          <li>
+            {{ v.get_vehicle_type_display }} | {{ v.plate }}
+            <a href="{% url 'fleet:edit' v.pk %}">Editar</a>
+            <a href="{% url 'fleet:delete' v.pk %}">Excluir</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Nenhum veículo cadastrado.</p>
+    {% endif %}
+  </section>
+
+{% endblock %}

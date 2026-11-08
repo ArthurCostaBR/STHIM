@@ -9,6 +9,13 @@ class SignupForm(UserCreationForm):
     class Meta:
         model = User
         fields = ["cpf", "username", "sector", "password1", "password2"]
+        labels = {
+            "cpf": "CPF",
+            "username": "Nome completo",
+            "sector": "Setor",
+            "password1": "Senha",
+            "password2": "Confirme a senha"
+        }
 
     def clean_username(self):
         return self.cleaned_data["username"]

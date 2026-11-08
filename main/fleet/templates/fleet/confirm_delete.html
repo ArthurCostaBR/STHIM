@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+
+{% block title %}Excluir veículo{% endblock %}
+
+{% block content %}
+  <section>
+    <h2>Excluir veículo</h2>
+    <p>
+      Tem certeza que deseja excluir <strong>{{ vehicle }}</strong>?
+      Esta ação não pode ser desfeita.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit">Confirmar exclusão</button>
+      <a href="{% url 'fleet:manage' %}">Cancelar</a>
+    </form>
+  </section>
+{% endblock %}

@@ -15,7 +15,7 @@
     <li><a href="#">Rotas personalizadas</a></li>
   {% endif %}
   {% if "fleet" in features %}
-    <li><a href="#">Gerenciamento de frota</a></li>
+    <li><a href="{% url 'fleet:manage' %}">Gerenciamento de frota</a></li>
   {% endif %}
   {% if "reports" in features or "route_sheets" in features %}
     <li><a href="#">Impressão de relatórios e planilhas de rotas</a></li>

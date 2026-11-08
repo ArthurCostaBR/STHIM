@@ -20,7 +20,7 @@ class Patient(models.Model):
 
     # Personal public fields
     name = models.CharField(max_length=150)
-    cpf = CPFField(unique=True)
+    cpf = CPFField(unique=True, error_messages={"unique": "Já existe um paciente com este CPF."})
     sus = models.CharField(max_length=15, blank=True, null=True, unique=True, validators=[sus_validator])
     phone = models.CharField(max_length=11, validators=[phone_validator])
     sex = models.CharField(max_length=1, choices=Sex.choices)
