@@ -4,29 +4,19 @@ from django.core.exceptions import PermissionDenied
 from .models import Sector
 
 class Feature:
-    PATIENTS = "patients"                      
-    SCHEDULE_TRANSPORT = "schedule_transport"  
-    APPOINTMENTS = "appointments"              
-    FIXED_ROUTES = "fixed_routes"              
-    CUSTOM_ROUTES = "custom_routes"            
-    FLEET = "fleet"                            
-    ROUTE_SHEETS = "route_sheets"              
-    AUDIT = "audit"                            
-    REPORTS = "reports"                        
+    PATIENTS = "patients"                      # Cadastro e gerenciamento de pacientes
+    SCHEDULE_TRANSPORT = "schedule_transport"  # Agendamento de transporte
+    APPOINTMENTS = "appointments"              # Gerenciamento de agendamentos
+    ROUTES = "routes"                          # Cadastro e gerenciamento de rotas
+    FLEET = "fleet"                            # Cadastro e gerenciamento de frota
+    DRIVERS = "drivers"                        # Cadastro e gerenciamento de motoristas
+    SHEETS = "sheets"                          # Impressão de planilhas
+
 
 SECTOR_FEATURES = {
-    Sector.MARCACAO: {
-        Feature.PATIENTS, Feature.SCHEDULE_TRANSPORT
-    },
-
-    Sector.ADMINISTRACAO: {
-        Feature.APPOINTMENTS, Feature.FIXED_ROUTES, Feature.CUSTOM_ROUTES,
-        Feature.FLEET, Feature.ROUTE_SHEETS, Feature.AUDIT, Feature.REPORTS,
-    },
-
-    Sector.GESTAO: {
-        Feature.REPORTS
-        },
+    Sector.MARCACAO: {Feature.PATIENTS, Feature.SCHEDULE_TRANSPORT, Feature.APPOINTMENTS},
+    Sector.ADMINISTRACAO: {Feature.ROUTES, Feature.FLEET, Feature.DRIVERS, Feature.SHEETS},
+    Sector.GESTAO: {Feature.SHEETS},
 }
 
 ALL_FEATURES = set().union(*SECTOR_FEATURES.values())
