@@ -7,6 +7,10 @@
   <section>
     <h2>{% if editing %}Editar veículo{% else %}Cadastro de veículos{% endif %}</h2>
 
+    {% if locked %}
+      <p>Este veículo está em uma rota ativa: só é possível alterar o status "Funcionando".</p>
+    {% endif %}
+
     <form method="post">
       {% csrf_token %}
       {{ form.non_field_errors }}
@@ -33,7 +37,8 @@
       <ul>
         {% for v in vehicles %}
           <li>
-            {{ v.get_vehicle_type_display }} | {{ v.plate }}
+            {{ v.get_vehicle_type_display }} | {{ v.plate }} | {{ v.seats }} vagas |
+            {% if v.is_operational %}Funcionando{% else %}Inoperante{% endif %}
             <a href="{% url 'fleet:edit' v.pk %}">Editar</a>
             <a href="{% url 'fleet:delete' v.pk %}">Excluir</a>
           </li>

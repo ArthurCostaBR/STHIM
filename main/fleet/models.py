@@ -25,6 +25,10 @@ class Vehicle(models.Model):
     # Private fields
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_operational = models.BooleanField("Funcionando", default=True)
+
+    def is_assigned(self) -> bool:
+        return False
 
     def __str__(self):
         return f"{self.get_vehicle_type_display()} ({self.plate})"
