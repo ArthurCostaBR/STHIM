@@ -9,13 +9,13 @@ class Feature:
     APPOINTMENTS = "appointments"              # Gerenciamento de agendamentos
     ROUTES = "routes"                          # Cadastro e gerenciamento de rotas
     FLEET = "fleet"                            # Cadastro e gerenciamento de frota
-    DRIVERS = "drivers"                        # Cadastro e gerenciamento de motoristas
+    MOTORISTS = "motorists"                    # Cadastro e gerenciamento de motoristas
     SHEETS = "sheets"                          # Impressão de planilhas
 
 
 SECTOR_FEATURES = {
     Sector.MARCACAO: {Feature.PATIENTS, Feature.SCHEDULE_TRANSPORT, Feature.APPOINTMENTS},
-    Sector.ADMINISTRACAO: {Feature.ROUTES, Feature.FLEET, Feature.DRIVERS, Feature.SHEETS},
+    Sector.ADMINISTRACAO: {Feature.ROUTES, Feature.FLEET, Feature.MOTORISTS, Feature.SHEETS},
     Sector.GESTAO: {Feature.SHEETS},
 }
 

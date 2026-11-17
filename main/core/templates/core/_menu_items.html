@@ -23,8 +23,12 @@
       </a>
     </li>
   {% endif %}
-  {% if "drivers" in features %}
-    <li><a href="#">Cadastro de motorista</a></li>
+  {% if "motorists" in features %}
+    <li>
+      <a href="{% url 'motorists:manage' %}"{% if request.resolver_match.app_name == 'motorists' %} aria-current="page"{% endif %}>
+        Cadastro de motorista
+      </a>
+    </li>
   {% endif %}
   {% if "sheets" in features %}
     <li><a href="#">Impressão de planilhas</a></li>

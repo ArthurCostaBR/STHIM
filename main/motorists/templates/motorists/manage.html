@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+
+{% block title %}Motoristas{% endblock %}
+
+{% block content %}
+
+  <section>
+    <h2>{% if editing %}Editar motorista{% else %}Cadastro de motoristas{% endif %}</h2>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {% for field in form %}
+        <div>
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+
+      <button type="submit">
+        {% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}
+      </button>
+      <a href="{% url 'motorists:manage' %}">Limpar</a>
+    </form>
+  </section>
+
+  <section>
+    <h2>Gerenciamento de motoristas</h2>
+
+    <form method="get" action="{% url 'motorists:manage' %}">
+      <input type="search" name="q" value="{{ q }}" placeholder="Pesquisar motorista">
+      <button type="submit">Buscar</button>
+    </form>
+
+    {% if motorists %}
+      <ul>
+        {% for d in motorists %}
+          <li>
+            {{ d.name }} | {{ d.cpf }}
+            <a href="{% url 'motorists:edit' d.pk %}">Editar</a>
+            <a href="{% url 'motorists:delete' d.pk %}">Excluir</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Nenhum motorista encontrado.</p>
+    {% endif %}
+  </section>
+
+{% endblock %}

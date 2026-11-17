@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'pages',
     'patients',
     'fleet',
+    'audit',
+    'motorists',
 ]
 
 MIDDLEWARE = [

@@ -6,6 +6,9 @@ from accounts.access import Feature, feature_required
 from core.normalizers import digits_only
 from .forms import PatientForm
 from .models import Patient
+from django.db import transaction
+from audit.models import AuditLog
+from audit.services import log_action
 
 @feature_required(Feature.PATIENTS)
 def patient_manage_view(request, pk=None):
@@ -13,10 +16,16 @@ def patient_manage_view(request, pk=None):
     form = PatientForm(request.POST or None, instance=editing)
 
     if request.method == "POST" and form.is_valid():
-        patient = form.save(commit=False)
-        if editing is None:
-            patient.registered_by = request.user
-        patient.save()
+        with transaction.atomic():
+            patient = form.save(commit=False)
+            if editing is None:
+                patient.registered_by = request.user
+            patient.save()
+            log_action(
+                request.user,
+                AuditLog.Action.UPDATE if editing else AuditLog.Action.CREATE,
+                patient,
+            )
         messages.success(
             request, "Paciente atualizado." if editing else "Paciente cadastrado."
         )
@@ -52,7 +61,9 @@ def patient_delete_view(request, pk):
 
     if request.method == "POST":
         try:
-            patient.delete()
+            with transaction.atomic():
+                log_action(request.user, AuditLog.Action.DELETE, patient)
+                patient.delete()
         except ProtectedError:
             messages.error(
                 request, "Este paciente possui agendamentos e não pode ser excluído."

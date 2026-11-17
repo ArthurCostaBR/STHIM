@@ -44,6 +44,9 @@ class Patient(models.Model):
         editable=False,
     )
 
+    def audit_label(self) -> str:
+        return self.name
+
     class Meta:
         ordering = ["name"]
         constraints = [
