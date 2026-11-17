@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block content %}
+  <section>
+    <h2>{{ heading }}</h2>
+    <p>
+      Tem certeza que deseja excluir <strong>{{ label }}</strong>?
+      Esta ação não pode ser desfeita.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit">Confirmar exclusão</button>
+      <a href="{{ cancel_url }}">Cancelar</a>
+    </form>
+  </section>
+{% endblock %}

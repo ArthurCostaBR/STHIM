@@ -26,3 +26,7 @@ def _append_verification_digit(partial_cpf: str) -> str:
         digit = digit if digit <= 9 else 0
 
         return f"{partial_cpf}{digit}"
+
+def phone_validator(value: str) -> None:
+    if not re.fullmatch(r"[0-9]{10,11}", value):
+        raise ValidationError("O telefone deve ter 10 ou 11 dígitos.", code="invalid_phone")
