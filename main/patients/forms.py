@@ -3,29 +3,26 @@ from core.normalizers import digits_only
 from .models import Patient
 
 class PatientForm(forms.ModelForm):
+    sus = forms.CharField(label="SUS", max_length=20, required=False)
     phone = forms.CharField(label="Telefone", max_length=15)
     cep = forms.CharField(label="CEP", max_length=9)
-    sus = forms.CharField(label="SUS", max_length=20, required=False)
 
     class Meta:
         model = Patient
         fields = [
-            "name", "cpf", "sus", "phone", "sex",
-            "birth_date", "color", "cep",
-            "street", "neighborhood", "house_number",
-            "city"
+            "name", "cpf", "sus", "birth_date", "phone", "sex",
+            "color", "city", "cep", "street", "neighborhood", "house_number",
         ]
         labels = {
             "name": "Nome completo",
             "cpf": "CPF",
-            "sus": "SUS",
-            "sex": "Sexo",
             "birth_date": "Data de nascimento",
+            "sex": "Sexo",
             "color": "Cor",
-            "street": "Rua / Avenida",
+            "city": "Cidade",
+            "street": "Endereço",
             "neighborhood": "Bairro",
             "house_number": "Número",
-            "city": "Cidade",
         }
         widgets = {
             "birth_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
@@ -38,6 +35,4 @@ class PatientForm(forms.ModelForm):
         return digits_only(self.cleaned_data["cep"])
 
     def clean_sus(self):
-        if digits_only(self.cleaned_data["sus"]) == "":
-            return None
-        return digits_only(self.cleaned_data["sus"])
+        return digits_only(self.cleaned_data["sus"]) or None

@@ -1,11 +1,11 @@
 from django.contrib import messages
-from .models import Patient
-from accounts.access import Feature, feature_required
-from django.db.models import Q
+from django.db.models import ProtectedError, Q
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
+from django.urls import reverse
+from accounts.access import Feature, feature_required
 from core.normalizers import digits_only
 from .forms import PatientForm
+from .models import Patient
 
 @feature_required(Feature.PATIENTS)
 def patient_manage_view(request, pk=None):
@@ -22,27 +22,47 @@ def patient_manage_view(request, pk=None):
         )
         return redirect("patients:manage")
 
-    query = request.GET.get("q", "").strip()
+    q = request.GET.get("q", "").strip()
     patients = Patient.objects.all()
-    if query:
-        filters = Q(name__icontains=query)
-        digits = digits_only(query)
+    if q:
+        query = Q(name__icontains=q)
+        digits = digits_only(q)
         if digits:
-            filters |= Q(cpf__startswith=digits)
-            filters |= Q(sus__startswith=digits)
-        patients = patients.filter(filters)
+            query |= Q(cpf__startswith=digits) | Q(sus__startswith=digits)
+        patients = patients.filter(query)
 
     return render(request, "patients/manage.html", {
         "form": form,
         "editing": editing,
         "patients": patients,
-        "q": query,
+        "q": q,
     })
 
 
 @feature_required(Feature.PATIENTS)
-@require_POST
 def patient_delete_view(request, pk):
-    get_object_or_404(Patient, pk=pk).delete()
-    messages.success(request, "Paciente excluído.")
-    return redirect("patients:manage")
+    patient = get_object_or_404(Patient, pk=pk)
+
+    blockers = patient.delete_blockers()
+    if blockers:
+        messages.error(
+            request, "Não é possível excluir este paciente: " + "; ".join(blockers) + "."
+        )
+        return redirect("patients:manage")
+
+    if request.method == "POST":
+        try:
+            patient.delete()
+        except ProtectedError:
+            messages.error(
+                request, "Este paciente possui agendamentos e não pode ser excluído."
+            )
+        else:
+            messages.success(request, "Paciente excluído.")
+        return redirect("patients:manage")
+
+    return render(request, "core/confirm_delete.html", {
+        "heading": "Excluir paciente",
+        "label": str(patient),
+        "cancel_url": reverse("patients:manage"),
+    })

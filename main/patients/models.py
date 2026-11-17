@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from core.fields import CPFField
-from .validators import sus_validator, phone_validator, cep_validator, validate_not_future, house_number_validator
+from .validators import cep_validator, sus_validator, validate_not_future
+from core.validators import phone_validator
 
 class Sex(models.TextChoices):
     FEMININO = "f", "Feminino"
@@ -18,21 +20,19 @@ class Color(models.TextChoices):
 
 class Patient(models.Model):
 
-    # Personal public fields
+    # Public fields
     name = models.CharField(max_length=150)
-    cpf = CPFField(unique=True, error_messages={"unique": "Já existe um paciente com este CPF."})
-    sus = models.CharField(max_length=15, blank=True, null=True, unique=True, validators=[sus_validator])
+    cpf = CPFField(unique=True, null=True, blank=True)
+    sus = models.CharField(max_length=15, unique=True, null=True, blank=True, validators=[sus_validator])
+    birth_date = models.DateField(validators=[validate_not_future])
     phone = models.CharField(max_length=11, validators=[phone_validator])
     sex = models.CharField(max_length=1, choices=Sex.choices)
-    birth_date = models.DateField(validators=[validate_not_future])
     color = models.CharField(max_length=20, choices=Color.choices)
-
-    # Address public fields
+    city = models.CharField(max_length=100)
     cep = models.CharField(max_length=8, validators=[cep_validator])
     street = models.CharField(max_length=150)
-    house_number = models.CharField(max_length=20, validators=[house_number_validator])
     neighborhood = models.CharField(max_length=150)
-    city = models.CharField(max_length=100)
+    house_number = models.CharField(max_length=20)
 
     # Private fields
     created_at = models.DateTimeField(auto_now_add=True)
@@ -44,5 +44,18 @@ class Patient(models.Model):
         editable=False,
     )
 
+    class Meta:
+        ordering = ["name"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(cpf__isnull=False) | Q(sus__isnull=False),
+                name="patient_has_cpf_or_sus",
+                violation_error_message="Informe o CPF ou o SUS.",
+            )
+        ]
+
     def __str__(self):
-        return f"{self.name} ({self.cpf})"
+        return f"{self.name} ({self.cpf or self.sus})"
+
+    def delete_blockers(self) -> list[str]:
+        return []
