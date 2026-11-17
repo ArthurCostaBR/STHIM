@@ -9,6 +9,7 @@ from .models import Patient
 from django.db import transaction
 from audit.models import AuditLog
 from audit.services import log_action
+from django.utils import timezone
 
 @feature_required(Feature.PATIENTS)
 def patient_manage_view(request, pk=None):
@@ -32,7 +33,7 @@ def patient_manage_view(request, pk=None):
         return redirect("patients:manage")
 
     q = request.GET.get("q", "").strip()
-    patients = Patient.objects.all()
+    patients = Patient.objects.search(q)
     if q:
         query = Q(name__icontains=q)
         digits = digits_only(q)
@@ -63,6 +64,7 @@ def patient_delete_view(request, pk):
         try:
             with transaction.atomic():
                 log_action(request.user, AuditLog.Action.DELETE, patient)
+                patient.appointments.filter(date__lt=timezone.localdate()).delete()
                 patient.delete()
         except ProtectedError:
             messages.error(

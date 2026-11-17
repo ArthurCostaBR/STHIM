@@ -6,16 +6,28 @@
       </a>
     </li>
   {% endif %}
+
   {% if "schedule_transport" in features %}
-    <li><a href="#">Agendamento de transporte</a></li>
+    <li>
+      <a href="{% url 'appointments:schedule' %}"{% if request.resolver_match.view_name == 'appointments:schedule' or request.resolver_match.view_name == 'appointments:edit' %} aria-current="page"{% endif %}>
+        Agendamento de transporte
+      </a>
+    </li>
   {% endif %}
+
   {% if "appointments" in features %}
-    <li><a href="#">Gerenciamento de agendamentos</a></li>
+    <li>
+      <a href="{% url 'appointments:manage' %}"{% if request.resolver_match.view_name == 'appointments:manage' %} aria-current="page"{% endif %}>
+        Gerenciamento de agendamentos
+      </a>
+    </li>
   {% endif %}
+
   {% if "routes" in features %}
     <li><a href="#">Cadastro de rotas</a></li>
     <li><a href="#">Gerenciamento de rotas</a></li>
   {% endif %}
+
   {% if "fleet" in features %}
     <li>
       <a href="{% url 'fleet:manage' %}"{% if request.resolver_match.app_name == 'fleet' %} aria-current="page"{% endif %}>
@@ -23,6 +35,7 @@
       </a>
     </li>
   {% endif %}
+
   {% if "motorists" in features %}
     <li>
       <a href="{% url 'motorists:manage' %}"{% if request.resolver_match.app_name == 'motorists' %} aria-current="page"{% endif %}>
@@ -30,6 +43,7 @@
       </a>
     </li>
   {% endif %}
+  
   {% if "sheets" in features %}
     <li><a href="#">Impressão de planilhas</a></li>
   {% endif %}

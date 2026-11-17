@@ -1,0 +1,58 @@
+{% extends "core/base.html" %}
+
+{% block title %}Gerenciamento de agendamentos{% endblock %}
+
+{% block content %}
+
+  <section>
+    <h2>Gerenciamento de agendamentos</h2>
+
+    <form method="get" action="{% url 'appointments:manage' %}">
+      {{ filters.non_field_errors }}
+      {% for field in filters %}
+        <div>
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <button type="submit">Filtrar</button>
+      <a href="{% url 'appointments:manage' %}">Limpar</a>
+    </form>
+
+    <h3>Pacientes agendados</h3>
+
+    {% if page_obj %}
+      <ol start="{{ page_obj.start_index }}">
+        {% for a in page_obj %}
+          <li>
+            {{ a.patient.name }} - {{ a.patient.document }} -
+            {{ a.date|date:"d/m/Y" }} - {{ a.appointment_time|time:"H:i" }} -
+            {{ a.destination }}
+            {% if a.companions.all %}(+ {{ a.companions.all|length }} acompanhante{{ a.companions.all|length|pluralize }}){% endif %}
+
+            {% if a.is_in_route %}
+              <em>Em rota</em>
+            {% else %}
+              <a href="{% url 'appointments:edit' a.pk %}">Editar</a>
+              <a href="{% url 'appointments:delete' a.pk %}">Excluir</a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+
+      <nav>
+        {% if page_obj.has_previous %}
+          <a href="?{{ querystring }}&page={{ page_obj.previous_page_number }}">Anterior</a>
+        {% endif %}
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        {% if page_obj.has_next %}
+          <a href="?{{ querystring }}&page={{ page_obj.next_page_number }}">Próxima</a>
+        {% endif %}
+      </nav>
+    {% else %}
+      <p>Nenhum agendamento encontrado.</p>
+    {% endif %}
+  </section>
+
+{% endblock %}

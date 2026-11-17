@@ -4,6 +4,8 @@ from django.db.models import Q
 from core.fields import CPFField
 from .validators import cep_validator, sus_validator, validate_not_future
 from core.validators import phone_validator
+from django.utils import timezone
+from core.normalizers import digits_only
 
 class Sex(models.TextChoices):
     FEMININO = "f", "Feminino"
@@ -16,6 +18,18 @@ class Color(models.TextChoices):
     PARDA = "parda", "Parda"
     AMARELA = "amarela", "Amarela"
     INDIGENA = "indigena", "Indígena"
+
+
+class PatientQuerySet(models.QuerySet):
+    def search(self, text):
+        text = (text or "").strip()
+        if not text:
+            return self
+        query = Q(name__icontains=text)
+        digits = digits_only(text)
+        if digits:
+            query |= Q(cpf__startswith=digits) | Q(sus__startswith=digits)
+        return self.filter(query)
 
 
 class Patient(models.Model):
@@ -43,6 +57,21 @@ class Patient(models.Model):
         related_name="registered_patients",
         editable=False,
     )
+
+    objects = PatientQuerySet.as_manager()
+
+    @property
+    def document(self) -> str:
+        return self.cpf or self.sus
+
+    def delete_blockers(self) -> list[str]:
+        today = timezone.localdate()
+        blockers = []
+        if self.appointments.filter(date__gte=today).exists():
+            blockers.append("possui agendamento de transporte")
+        if self.companion_appointments.filter(date__gte=today).exists():
+            blockers.append("é acompanhante em um agendamento de transporte")
+        return blockers
 
     def audit_label(self) -> str:
         return self.name
