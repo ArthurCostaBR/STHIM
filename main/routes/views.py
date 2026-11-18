@@ -12,9 +12,10 @@ from django.utils.http import urlencode
 from accounts.access import Feature, feature_required
 from audit.models import AuditLog
 from audit.services import log_action
+from core.choices import Region
 from core.normalizers import plate_normalizer
 from fleet.models import Vehicle
-from .drafts import clear_draft, get_draft, save_draft
+from .drafts import clear_draft, data_from_form, data_from_route, get_draft, save_draft
 from .forms import RouteFilterForm, RouteForm, SelectionFilterForm
 from .models import Route
 from .services import AssignmentConflict, assign_appointments, selectable_appointments
@@ -28,11 +29,10 @@ def _people(appointments):
     return sum(1 + len(a.companions.all()) for a in appointments)
 
 
-def _register_url(route_date=None, editing=None):
-    url = reverse("routes:register")
-    if route_date and not editing:
-        url += "?" + urlencode({"date": route_date.isoformat()})
-    return url
+def _selection_url(cleaned):
+    params = {key: cleaned[key] for key in ("time", "region") if cleaned.get(key)}
+    url = reverse("routes:selection")
+    return f"{url}?{urlencode(params)}" if params else url
 
 
 def _editing_route(draft):
@@ -61,78 +61,25 @@ def route_register_view(request):
         messages.error(request, "A rota que estava sendo editada não está mais disponível.")
         return redirect("routes:manage")
 
-    data = request.POST if request.method == "POST" else request.GET
-    filters = SelectionFilterForm(
-        data or None, editing=editing, initial={"date": draft["date"]}
+    form = RouteForm(
+        request.POST or None, instance=editing, initial=draft["route"] or {}
     )
-    bound = filters.is_bound
-    valid = filters.is_valid() if bound else True
-    cleaned = filters.cleaned_data if bound else {}
 
-    if editing:
-        route_date = editing.date
-    elif bound:
-        route_date = cleaned.get("date")
-    else:
-        route_date = draft["date"]
+    if request.method == "POST" and form.is_valid():
+        same_date = draft["date"] == form.cleaned_data["date"]
+        save_draft(
+            request,
+            route=data_from_form(form.cleaned_data),
+            selected=draft["selected"] if same_date else [],
+            route_id=editing.pk if editing else None,
+        )
+        return redirect("routes:selection")
 
-    same_date = route_date is not None and draft["date"] == route_date
-    selected = set(draft["selected"]) if same_date else set()
-
-    if request.method == "POST" and route_date and valid:
-        if same_date:
-            shown = _ids(request.POST.getlist("shown"))
-            checked = _ids(request.POST.getlist("appointments"))
-            selected = (selected - shown) | checked  # só altera o que estava na tela
-        route_id = editing.pk if editing else None
-        save_draft(request, date=route_date, selected=selected, route_id=route_id)
-
-        params = {"time": cleaned.get("time"), "region": cleaned.get("region")}
-        if not editing:
-            params["date"] = route_date.isoformat()
-        query = urlencode({key: value for key, value in params.items() if value})
-        results_url = reverse("routes:register") + (f"?{query}" if query else "")
-
-        if request.POST.get("action") == "next":
-            allowed = set(
-                selectable_appointments(route_date, editing)
-                .filter(pk__in=selected)
-                .values_list("pk", flat=True)
-            )
-            if not allowed:
-                messages.error(request, "Selecione ao menos um agendamento para continuar.")
-                return redirect(results_url)
-            save_draft(request, date=route_date, selected=allowed, route_id=route_id)
-            return redirect("routes:details")
-        return redirect(results_url)
-
-    options, hidden = [], []
-    if route_date and valid:
-        base = selectable_appointments(route_date, editing)
-        listed = base
-        if cleaned.get("time"):
-            listed = listed.filter(appointment_time=parse_time(cleaned["time"]))
-        if cleaned.get("region"):
-            listed = listed.filter(region=cleaned["region"])
-        options = list(listed)
-        hidden = list(base.filter(pk__in=selected - {a.pk for a in options}))
-
-    picked = [a for a in options if a.pk in selected]
-    return render(request, "routes/register.html", {
-        "filters": filters,
-        "editing": editing,
-        "route_date": route_date,
-        "options": options,
-        "selected": selected,
-        "selected_count": len(picked) + len(hidden),
-        "selected_people": _people(picked) + _people(hidden),
-        "hidden_count": len(hidden),
-        "hidden_people": _people(hidden),
-    })
+    return render(request, "routes/register.html", {"form": form, "editing": editing})
 
 
 @feature_required(Feature.ROUTES)
-def route_details_view(request):
+def route_selection_view(request):
     draft = get_draft(request)
     editing, ok = _editing_route(draft)
     if not ok:
@@ -140,34 +87,55 @@ def route_details_view(request):
         messages.error(request, "A rota que estava sendo editada não está mais disponível.")
         return redirect("routes:manage")
 
-    route_date = draft["date"]
-    if route_date is None or not draft["selected"]:
-        messages.warning(request, "Selecione os pacientes da rota antes de continuar.")
+    if not draft["route"]:
+        messages.warning(request, "Preencha os dados da rota antes de selecionar os pacientes.")
         return redirect("routes:register")
 
-    appointments = list(
-        selectable_appointments(route_date, editing).filter(pk__in=draft["selected"])
-    )
-    dropped = len(draft["selected"]) - len(appointments)
-    if dropped:
-        save_draft(
-            request, date=route_date, selected=[a.pk for a in appointments],
-            route_id=editing.pk if editing else None,
-        )
-        messages.warning(
-            request,
-            f"{dropped} agendamento(s) selecionado(s) não estão mais disponíveis "
-            "e saíram da seleção.",
+    route_date = draft["date"]
+    vehicle = Vehicle.objects.filter(pk=draft["route"]["vehicle"]).first()
+    if vehicle is None:
+        messages.warning(request, "O veículo escolhido não existe mais. Escolha outro.")
+        return redirect("routes:register")
+
+    selected = set(draft["selected"])
+    data = request.POST if request.method == "POST" else request.GET
+    filters = SelectionFilterForm(data or None, route_date=route_date, editing=editing)
+    valid = filters.is_valid() if filters.is_bound else True
+    cleaned = filters.cleaned_data if filters.is_bound and valid else {}
+    route_id = editing.pk if editing else None
+
+    if request.method == "POST":
+        shown = _ids(request.POST.getlist("shown"))
+        checked = _ids(request.POST.getlist("appointments"))
+        selected = (selected - shown) | checked
+        save_draft(request, route=draft["route"], selected=selected, route_id=route_id)
+        results_url = _selection_url(cleaned)
+
+        if request.POST.get("action") != "register":
+            return redirect(results_url)
+
+        appointments = list(
+            selectable_appointments(route_date, editing).filter(pk__in=selected)
         )
         if not appointments:
-            return redirect(_register_url(route_date, editing))
+            messages.error(request, "Selecione ao menos um agendamento para cadastrar a rota.")
+            return redirect(results_url)
 
-    form = RouteForm(
-        request.POST or None, instance=editing,
-        route_date=route_date, appointments=appointments,
-    )
+        people = _people(appointments)
+        if people > vehicle.seats:
+            messages.error(
+                request,
+                f"Limite máximo atingido: a seleção tem {people} pessoas (pacientes e "
+                f"acompanhantes) e o veículo tem {vehicle.seats} vagas.",
+            )
+            return redirect(results_url)
 
-    if request.method == "POST" and form.is_valid():
+        form = RouteForm(draft["route"], instance=editing)
+        if not form.is_valid():
+            problems = " ".join(error for errors in form.errors.values() for error in errors)
+            messages.error(request, f"Revise os dados da rota: {problems}")
+            return redirect("routes:register")
+
         try:
             with transaction.atomic():
                 route = form.save(commit=False)
@@ -183,36 +151,53 @@ def route_details_view(request):
         except AssignmentConflict:
             messages.error(
                 request,
-                "Algum agendamento selecionado foi incluído em outra rota. "
-                "Revise a seleção.",
+                "Algum agendamento selecionado foi incluído em outra rota. Revise a seleção.",
             )
-            return redirect(_register_url(route_date, editing))
+            return redirect(results_url)
 
         clear_draft(request)
         messages.success(request, "Rota atualizada." if editing else "Rota cadastrada.")
-        if editing:
-            return redirect("routes:manage")
-        return redirect(_register_url(route.date))
+        return redirect("routes:manage" if editing else "routes:register")
 
-    return render(request, "routes/details.html", {
-        "form": form,
+    base = selectable_appointments(route_date, editing)
+    listed = base
+    if cleaned.get("time"):
+        listed = listed.filter(appointment_time=parse_time(cleaned["time"]))
+    if cleaned.get("region"):
+        listed = listed.filter(region=cleaned["region"])
+    options = list(listed)
+
+    hidden = list(base.filter(pk__in=selected - {a.pk for a in options}))
+    picked = [a for a in options if a.pk in selected]
+
+    route = draft["route"]
+    return render(request, "routes/selection.html", {
+        "filters": filters,
         "editing": editing,
         "route_date": route_date,
-        "appointments": appointments,
-        "people": _people(appointments),
-        "vehicle_warning": bool(editing and not editing.vehicle.is_operational),
+        "departure_time": route["departure_time"],
+        "region_label": dict(Region.choices).get(route["region"], route["region"]),
+        "vehicle_label": f"{vehicle.get_vehicle_type_display()} | {vehicle.plate}",
+        "capacity": vehicle.seats,
+        "options": options,
+        "selected": selected,
+        "selected_count": len(picked) + len(hidden),
+        "selected_people": _people(picked) + _people(hidden),
+        "hidden_count": len(hidden),
+        "hidden_people": _people(hidden),
     })
 
 
 @feature_required(Feature.ROUTES)
 def route_edit_view(request, pk):
+    """Abre a edição: carrega a rota no rascunho e segue para a tela 1."""
     route = get_object_or_404(Route, pk=pk)
     if route.is_concluded:
         messages.error(request, "Esta rota já foi concluída e não pode ser alterada.")
         return redirect("routes:manage")
     save_draft(
         request,
-        date=route.date,
+        route=data_from_route(route),
         selected=route.appointments.values_list("pk", flat=True),
         route_id=route.pk,
     )
@@ -221,6 +206,7 @@ def route_edit_view(request, pk):
 
 @feature_required(Feature.ROUTES)
 def route_reset_view(request):
+    """Limpa o rascunho (lixeira dos wireframes)."""
     was_editing = bool(get_draft(request)["route_id"])
     clear_draft(request)
     return redirect("routes:manage" if was_editing else "routes:register")
@@ -228,6 +214,7 @@ def route_reset_view(request):
 
 @feature_required(Feature.ROUTES)
 def vehicle_search_view(request):
+    """Busca de veículos funcionando e livres na data, para o seletor da tela 1."""
     term = request.GET.get("q", "").strip()
     if len(term) < 2:
         return JsonResponse({"results": []})
@@ -299,10 +286,10 @@ def route_delete_view(request, pk):
         return redirect("routes:manage")
 
     if request.method == "POST":
-        route_pk = route.pk 
+        route_pk = route.pk
         with transaction.atomic():
             log_action(request.user, AuditLog.Action.DELETE, route)
-            route.delete() 
+            route.delete()
         if get_draft(request)["route_id"] == route_pk:
             clear_draft(request)
         messages.success(

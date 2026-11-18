@@ -25,7 +25,7 @@
 
   {% if "routes" in features %}
     <li>
-      <a href="{% url 'routes:register' %}"{% if request.resolver_match.view_name == 'routes:register' or request.resolver_match.view_name == 'routes:details' %} aria-current="page"{% endif %}>
+      <a href="{% url 'routes:register' %}"{% if request.resolver_match.view_name == 'routes:register' or request.resolver_match.view_name == 'routes:selection' %} aria-current="page"{% endif %}>
         Cadastro de rotas
       </a>
     </li>

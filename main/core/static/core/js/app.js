@@ -190,6 +190,12 @@
       try {
         const endpoint = new URL(url, window.location.origin);
         endpoint.searchParams.set("q", term);
+        const dateSource = select.dataset.dateSource
+          ? document.getElementById(select.dataset.dateSource)
+          : null;
+        if (dateSource && dateSource.value) {
+          endpoint.searchParams.set("date", dateSource.value);
+        }
         const response = await fetch(endpoint, {
           credentials: "same-origin",
           headers: { Accept: "application/json" },
@@ -229,6 +235,7 @@
     const counter = $("[data-selection-counter]");
     if (!counter) return;
     const list = $("[data-selection-list]");
+    const capacity = Number(counter.dataset.capacity || 0);
     const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
     const update = () => {
@@ -240,7 +247,8 @@
       });
       counter.textContent =
         `${plural(appointments, "agendamento selecionado", "agendamentos selecionados")} | ` +
-        `${plural(people, "pessoa", "pessoas")} (com acompanhantes)`;
+        `${people} de ${plural(capacity, "vaga", "vagas")} (pacientes e acompanhantes)`;
+      counter.classList.toggle("is-over", capacity > 0 && people > capacity);
     };
 
     list?.addEventListener("change", update);

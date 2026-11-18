@@ -1,0 +1,66 @@
+{% extends "core/base.html" %}
+
+{% block title %}Cadastro de rotas · STHIM{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <h2 class="card__title">{% if editing %}Editar rota{% else %}Cadastro de rotas{% endif %} - seleção de pacientes</h2>
+
+    <p class="route-summary">
+      <strong>{{ route_date|date:"d/m/Y" }}</strong> | {{ departure_time }} | {{ region_label }} |
+      {{ vehicle_label }} |
+      <a href="{% url 'routes:register' %}">Alterar dados da rota</a>
+    </p>
+
+    <form method="post" action="{% url 'routes:selection' %}">
+      {% csrf_token %}
+      {{ filters.non_field_errors }}
+
+      <div class="filters filters--wide">
+        {% include "core/_filter_field.html" with field=filters.time %}
+        {% include "core/_filter_field.html" with field=filters.region %}
+        <button type="submit" name="action" value="filter" class="btn btn--primary filters__action">Filtrar</button>
+      </div>
+
+      <h3 class="card__subtitle">Pacientes agendados | {{ route_date|date:"d/m/Y" }}</h3>
+
+      <p class="capacity{% if selected_people > capacity %} is-over{% endif %}" data-selection-counter
+         data-capacity="{{ capacity }}"
+         data-base-appointments="{{ hidden_count }}" data-base-people="{{ hidden_people }}"
+         aria-live="polite">
+        {{ selected_count }} agendamento{{ selected_count|pluralize }} selecionado{{ selected_count|pluralize }} |
+        {{ selected_people }} de {{ capacity }} vaga{{ capacity|pluralize }} (pacientes e acompanhantes)
+      </p>
+
+      {% if options %}
+        <ul class="rows" data-selection-list>
+          {% for a in options %}
+            <li>
+              <label class="row row--select" data-people="{{ a.companions.all|length|add:1 }}">
+                <input type="hidden" name="shown" value="{{ a.pk }}">
+                <span class="row__num">{{ forloop.counter }}.</span>
+                <span class="row__main">
+                  <strong>{{ a.patient.name }}</strong> | {{ a.destination }} |
+                  {{ a.appointment_time|time:"H:i" }} | {{ a.get_region_display }} |
+                  {{ a.notes|default:"sem observação" }} |
+                  {% for c in a.companions.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% empty %}sem acompanhante{% endfor %}
+                </span>
+                <span class="row__add">
+                  Adicionar
+                  <input type="checkbox" name="appointments" value="{{ a.pk }}"{% if a.pk in selected %} checked{% endif %}>
+                </span>
+              </label>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">Nenhum agendamento disponível para a data e os filtros informados.</p>
+      {% endif %}
+
+      <div class="form-actions">
+        <button type="submit" name="action" value="register" class="btn btn--primary">{% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}</button>
+        <a class="btn btn--ghost" href="{% url 'routes:reset' %}">{% if editing %}Cancelar{% else %}Limpar{% endif %}</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

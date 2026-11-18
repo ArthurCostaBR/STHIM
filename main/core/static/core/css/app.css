@@ -179,6 +179,8 @@ body.home-page { background: var(--bg-panel); }
 .row--select { cursor: pointer; }
 .row__add { display: flex; align-items: center; gap: .35rem; padding: .15rem .5rem; font-size: .78rem; background: var(--bg-row); border-radius: 6px; white-space: nowrap; }
 .message a { font-weight: 600; text-decoration: underline; }
+.filters__action { align-self: flex-end; }
+.capacity.is-over { color: #b00020; font-weight: 600; }
 
 /* Textos escuros nas telas com foto de fundo */
 .auth-wrap,

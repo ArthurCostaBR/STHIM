@@ -5,7 +5,7 @@ app_name = "routes"
 
 urlpatterns = [
     path("", views.route_register_view, name="register"),
-    path("details/", views.route_details_view, name="details"),
+    path("selection/", views.route_selection_view, name="selection"),
     path("vehicles/search/", views.vehicle_search_view, name="vehicle_search"),
     path("reset/", views.route_reset_view, name="reset"),
     path("manage/", views.route_manage_view, name="manage"),
