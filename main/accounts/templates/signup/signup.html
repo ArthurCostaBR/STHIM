@@ -1,18 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup</title>
-</head>
-<body>
-    <h1>Cadastre-se</h1>
-    <form action="{% url 'accounts:signup' %}" method="POST">
-        {% csrf_token %}
+{% extends "core/base_auth.html" %}
 
-        {{ form.as_p }}
+{% block title %}Cadastro · STHIM{% endblock %}
 
-        <input type="submit"  value="Enviar">
+{% block auth_content %}
+  <section class="auth-card">
+    <h2 class="auth-card__title">Cadastro</h2>
+
+    <form method="post" data-steps>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      <div data-step>
+        {% include "core/_auth_field.html" with field=form.username %}
+        {% include "core/_auth_field.html" with field=form.cpf %}
+        {% include "core/_auth_field.html" with field=form.sector %}
+        <div class="form-actions">
+          <button type="button" class="btn" data-step-next>Avançar</button>
+        </div>
+      </div>
+
+      <div data-step>
+        {% include "core/_auth_field.html" with field=form.password1 toggle=True %}
+        {% include "core/_auth_field.html" with field=form.password2 toggle=True %}
+        <div class="form-actions">
+          <button type="submit" class="btn">Enviar</button>
+        </div>
+      </div>
     </form>
-</body>
-</html>
+  </section>
+
+  <p class="auth-note" data-step-note="1">
+    O cadastro somente será concluído após a revisão e aprovação do gerente do sistema.
+  </p>
+{% endblock %}

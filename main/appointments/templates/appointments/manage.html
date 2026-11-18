@@ -1,58 +1,55 @@
 {% extends "core/base.html" %}
 
-{% block title %}Gerenciamento de agendamentos{% endblock %}
+{% block title %}Gerenciamento de agendamentos · STHIM{% endblock %}
 
 {% block content %}
+  <section class="card">
+    <h2 class="card__title">Gerenciamento de agendamentos</h2>
 
-  <section>
-    <h2>Gerenciamento de agendamentos</h2>
-
-    <form method="get" action="{% url 'appointments:manage' %}">
+    <form method="get" action="{% url 'appointments:manage' %}" class="filters">
       {{ filters.non_field_errors }}
       {% for field in filters %}
-        <div>
+        <div class="field{% if field.errors %} has-error{% endif %}">
           {{ field.label_tag }}
           {{ field }}
           {{ field.errors }}
         </div>
       {% endfor %}
-      <button type="submit">Filtrar</button>
-      <a href="{% url 'appointments:manage' %}">Limpar</a>
+      <button type="submit" class="btn">Filtrar</button>
+      <a class="btn btn--ghost" href="{% url 'appointments:manage' %}">Limpar</a>
     </form>
 
-    <h3>Pacientes agendados</h3>
+    <h3 class="card__subtitle">Pacientes agendados</h3>
 
     {% if page_obj %}
-      <ol start="{{ page_obj.start_index }}">
+      <ul class="rows">
         {% for a in page_obj %}
-          <li>
-            {{ a.patient.name }} - {{ a.patient.document }} -
-            {{ a.date|date:"d/m/Y" }} - {{ a.appointment_time|time:"H:i" }} -
-            {{ a.destination }}
-            {% if a.companions.all %}(+ {{ a.companions.all|length }} acompanhante{{ a.companions.all|length|pluralize }}){% endif %}
-
-            {% if a.is_in_route %}
-              <em>Em rota</em>
-            {% else %}
-              <a href="{% url 'appointments:edit' a.pk %}">Editar</a>
-              <a href="{% url 'appointments:delete' a.pk %}">Excluir</a>
-            {% endif %}
+          <li class="row">
+            <span class="row__num">{{ page_obj.start_index|add:forloop.counter0 }}.</span>
+                        <span class="row__main">
+              <strong>{{ a.patient.name }}</strong> | {{ a.patient.document }} |
+              {{ a.date|date:"d/m/Y" }} | {{ a.appointment_time|time:"H:i" }} | {{ a.destination }}
+              {% with n=a.companions.all|length %}
+                {% if n %}<span class="badge badge--info">+{{ n }} acompanhante{{ n|pluralize }}</span>{% endif %}
+              {% endwith %}
+              {% if a.route %}
+                <br><small>Em rota: {{ a.route.name }}</small>
+              {% endif %}
+            </span>
+            <span class="row__actions">
+              {% if a.route %}
+                <span class="badge">Em rota</span>
+              {% else %}
+                <a class="action" href="{% url 'appointments:edit' a.pk %}">Editar</a>
+                <a class="action action--danger" href="{% url 'appointments:delete' a.pk %}">Excluir</a>
+              {% endif %}
+            </span>
           </li>
         {% endfor %}
-      </ol>
-
-      <nav>
-        {% if page_obj.has_previous %}
-          <a href="?{{ querystring }}&page={{ page_obj.previous_page_number }}">Anterior</a>
-        {% endif %}
-        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-        {% if page_obj.has_next %}
-          <a href="?{{ querystring }}&page={{ page_obj.next_page_number }}">Próxima</a>
-        {% endif %}
-      </nav>
+      </ul>
+      {% include "core/_pager.html" %}
     {% else %}
-      <p>Nenhum agendamento encontrado.</p>
+      <p class="empty">Nenhum agendamento encontrado.</p>
     {% endif %}
   </section>
-
 {% endblock %}

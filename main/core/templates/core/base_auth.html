@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+
+{% block body_class %}auth{% endblock %}
+
+{% block layout %}
+  <div class="auth-wrap">
+    <header class="auth-brand">
+      <h1>STHIM</h1>
+      <p>Sistema de Transporte Hospitalar Intermunicipal</p>
+    </header>
+
+    {% include "core/_messages.html" %}
+
+    {% block auth_content %}{% endblock %}
+  </div>
+{% endblock %}

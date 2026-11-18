@@ -1,6 +1,7 @@
 from django import forms
 from core.normalizers import digits_only
 from .models import Patient
+from core.forms import SelectPlaceholderMixin
 
 class PatientForm(forms.ModelForm):
     sus = forms.CharField(label="SUS", max_length=20, required=False)

@@ -1,42 +1,26 @@
 {% extends "core/base.html" %}
 
-{% block title %}Agendamento de transporte{% endblock %}
+{% block title %}Agendamento de transporte · STHIM{% endblock %}
 
 {% block content %}
+  <section class="card">
+    <h2 class="card__title">{% if editing %}Editar agendamento{% else %}Agendamento de transporte{% endif %}</h2>
 
-  <section>
-    <h2>{% if editing %}Editar agendamento{% else %}Agendamento de transporte{% endif %}</h2>
-
-    <form method="get">
-      <input type="search" name="q" value="{{ patient_q }}" placeholder="Pesquisar paciente">
-      <input type="search" name="aq" value="{{ companion_q }}" placeholder="Pesquisar acompanhantes">
-      <button type="submit">Buscar</button>
+    {# Sem JavaScript: busca por recarregamento da página #}
+    <form method="get" class="search no-js-only">
+      <input type="search" name="q" value="{{ patient_q }}" placeholder="Pesquisar paciente" aria-label="Pesquisar paciente">
+      <input type="search" name="aq" value="{{ companion_q }}" placeholder="Pesquisar acompanhantes" aria-label="Pesquisar acompanhantes">
+      <button type="submit" class="btn">Buscar</button>
     </form>
-    <p>
-      <small>
-        Pesquise por nome, CPF ou SUS e selecione nas listas abaixo.
-        Faça as buscas antes de preencher o restante, pois cada busca recarrega a página.
-      </small>
-    </p>
 
     <form method="post" action="{{ request.get_full_path }}">
       {% csrf_token %}
       {{ form.non_field_errors }}
-
-      {% for field in form %}
-        <div>
-          {{ field.label_tag }}
-          {{ field }}
-          {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-          {{ field.errors }}
-        </div>
-      {% endfor %}
-
-      <button type="submit">
-        {% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}
-      </button>
-      <a href="{% url 'appointments:schedule' %}">Limpar</a>
+      {% include "core/_form_fields.html" with variant="form-grid--appointment" %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">{% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}</button>
+        <a class="btn btn--ghost" href="{% url 'appointments:schedule' %}">Limpar</a>
+      </div>
     </form>
   </section>
-
 {% endblock %}

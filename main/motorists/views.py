@@ -7,13 +7,14 @@ from core.normalizers import digits_only
 from .forms import MotoristsForm
 from .models import Motorists
 from routes.services import ensure_history
+from routes.locks import blocked_message, routes_of_motorist
 
 @feature_required(Feature.MOTORISTS)
 def motorists_manage_view(request, pk=None):
     editing = get_object_or_404(Motorists, pk=pk) if pk else None
 
-    if editing and request.method == "POST" and not ensure_history(request):
-        return redirect("fleet:manage")
+    if editing and _route_lock(request, editing, "alterar") and request.method == "POST" and not ensure_history(request):
+        return redirect("motorists:manage")
     
     form = MotoristsForm(request.POST or None, instance=editing)
 
@@ -25,26 +26,31 @@ def motorists_manage_view(request, pk=None):
         return redirect("motorists:manage")
 
     q = request.GET.get("q", "").strip()
-    drivers = Motorists.objects.all()
-
-    if q:
+    searched = bool(q)
+    motorists = Motorists.objects.none()
+    
+    if searched:
         query = Q(name__icontains=q)
         digits = digits_only(q)
         if digits:
             query |= Q(cpf__startswith=digits)
-        drivers = drivers.filter(query)
+        motorists = Motorists.objects.filter(query)
 
     return render(request, "motorists/manage.html", {
         "form": form,
         "editing": editing,
-        "motorists": drivers,
+        "motorists": motorists,
         "q": q,
+        "searched": searched,
     })
 
 
 @feature_required(Feature.MOTORISTS)
 def motorists_delete_view(request, pk):
     driver = get_object_or_404(Motorists, pk=pk)
+
+    if _route_lock(request, driver, "excluir"): 
+        return redirect("motorists:manage")
 
     blockers = driver.delete_blockers()
     if blockers:
@@ -72,3 +78,13 @@ def motorists_delete_view(request, pk):
         "label": str(driver),
         "cancel_url": reverse("motorists:manage"),
     })
+
+def _route_lock(request, motorist, action):
+    routes = routes_of_motorist(motorist)
+    if routes:
+        messages.error(request, blocked_message(
+            action, f"o motorista {motorist.name}", routes,
+            "Para continuar, troque o motorista em",
+        ))
+        return True
+    return False

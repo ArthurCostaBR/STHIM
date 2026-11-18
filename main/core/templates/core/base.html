@@ -1,36 +1,42 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" class="no-js">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}STHIM{% endblock %}</title>
+  <script>document.documentElement.className = "js";</script>
+  <link rel="stylesheet" href="{% static 'core/css/app.css' %}">
 </head>
-<body>
+<body class="{% block body_class %}app{% endblock %}">
+  {% block layout %}
+    <div class="shell">
+      {% block sidebar %}
+        <aside class="sidebar">
+          <div class="sidebar__brand"><a href="{% url 'pages:home' %}">STHIM</a></div>
 
-  {% block sidebar %}
-  <aside>
-    <h1><a href="{% url 'pages:home' %}">STHIM</a></h1>
+          <nav class="menu" aria-label="Menu principal">
+            {% include "core/_menu_items.html" %}
+          </nav>
 
-    <nav>
-      {% include "core/_menu_items.html" %}
-    </nav>
+          <div class="user-box">
+            <strong>{{ user.username }}</strong>
+            <span>{{ user.get_sector_display }}</span>
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn--ghost">Sair</button>
+            </form>
+          </div>
+        </aside>
+      {% endblock %}
 
-    <div>
-      <strong>{{ user.username }}</strong><br>
-      <small>{{ user.get_sector_display }}</small>
+      <main class="main">
+        {% include "core/_messages.html" %}
+        {% block content %}{% endblock %}
+      </main>
     </div>
-  </aside>
   {% endblock %}
 
-  <main>
-    {% if messages %}
-      <ul>
-        {% for message in messages %}<li>{{ message }}</li>{% endfor %}
-      </ul>
-    {% endif %}
-
-    {% block content %}{% endblock %}
-  </main>
-
+  <script src="{% static 'core/js/app.js' %}" defer></script>
 </body>
 </html>

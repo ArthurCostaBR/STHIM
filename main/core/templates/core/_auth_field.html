@@ -1,0 +1,12 @@
+<div class="field{% if field.errors %} has-error{% endif %}">
+  <label class="sr-only" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {% if toggle %}
+    <div class="password-field">
+      {{ field }}
+      <button type="button" class="password-field__toggle" data-toggle-password aria-pressed="false">Mostrar</button>
+    </div>
+  {% else %}
+    {{ field }}
+  {% endif %}
+  {{ field.errors }}
+</div>

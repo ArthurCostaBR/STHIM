@@ -1,0 +1,10 @@
+{% if messages %}
+  <ul class="messages" role="status">
+    {% for message in messages %}
+      <li class="message message--{{ message.level_tag }}">
+        <span>{{ message }}</span>
+        <button type="button" class="message__close" data-dismiss aria-label="Fechar">×</button>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

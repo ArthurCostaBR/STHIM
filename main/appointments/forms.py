@@ -5,6 +5,7 @@ from core.choices import Region
 from core.forms import YesNoField
 from patients.models import Patient
 from .models import Appointment
+from django.urls import reverse
 
 class PatientChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
@@ -22,12 +23,7 @@ class AppointmentForm(forms.ModelForm):
         label="Paciente",
         empty_label="Pesquise e selecione o paciente",
     )
-    companions = PatientMultipleChoiceField(
-        queryset=Patient.objects.none(),
-        required=False,
-        label="Acompanhantes",
-        help_text="Opcional. Segure Ctrl para selecionar mais de um.",
-    )
+
     has_comorbidity = YesNoField(label="Comorbidade")
 
     class Meta:
@@ -51,6 +47,14 @@ class AppointmentForm(forms.ModelForm):
             companion_search, self._selected("companions")
         )
 
+        search_url = reverse("appointments:patient_search")
+        for name, hint in (("patient", "Pesquisar paciente"), ("companions", "Adicionar acompanhantes")):
+            self.fields[name].widget.attrs.update({
+                "data-picker": "",
+                "data-search-url": search_url,
+                "data-placeholder": hint,
+            })
+
     def _selected(self, name):
         if self.is_bound:
             raw = self.data.getlist(self.add_prefix(name))
@@ -71,7 +75,6 @@ class AppointmentForm(forms.ModelForm):
         return Patient.objects.filter(query)
 
     def _busy_ids(self, date):
-        """Ids de quem já está em outro agendamento na data (como paciente ou acompanhante)."""
         others = Appointment.objects.filter(date=date)
         if self.instance.pk:
             others = others.exclude(pk=self.instance.pk)

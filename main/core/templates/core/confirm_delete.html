@@ -1,21 +1,21 @@
 {% extends "core/base.html" %}
 
-{% block title %}{{ heading }}{% endblock %}
+{% block title %}{{ heading }} · STHIM{% endblock %}
 
 {% block content %}
-  <section>
-    <h2>{{ heading }}</h2>
-    <p>
-      Tem certeza que deseja excluir <strong>{{ label }}</strong>?
-      Esta ação não pode ser desfeita.
+  <section class="card card--narrow">
+    <h2 class="card__title">{{ heading }}</h2>
+    <p class="confirm__text">
+      Tem certeza que deseja excluir <strong>{{ label }}</strong>? Esta ação não pode ser desfeita.
     </p>
-
-     {% if note %}<p>{{ note }}</p>{% endif %}
+    {% if note %}<p class="confirm__text">{{ note }}</p>{% endif %}
 
     <form method="post">
       {% csrf_token %}
-      <button type="submit">Confirmar exclusão</button>
-      <a href="{{ cancel_url }}">Cancelar</a>
+      <div class="form-actions">
+        <button type="submit" class="btn btn--danger">Confirmar exclusão</button>
+        <a class="btn btn--ghost" href="{{ cancel_url }}">Cancelar</a>
+      </div>
     </form>
   </section>
 {% endblock %}

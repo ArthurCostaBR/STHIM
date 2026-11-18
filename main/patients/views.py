@@ -11,13 +11,15 @@ from audit.models import AuditLog
 from audit.services import log_action
 from django.utils import timezone
 from routes.services import ensure_history
+from django.core.paginator import Paginator
+from routes.locks import blocked_message, routes_of_patient
 
 @feature_required(Feature.PATIENTS)
 def patient_manage_view(request, pk=None):
     editing = get_object_or_404(Patient, pk=pk) if pk else None
 
-    if editing and request.method == "POST" and not ensure_history(request):
-        return redirect("fleet:manage")
+    if editing and _route_lock(request, editing, "alterar"):
+        return redirect("patients:manage")
 
     form = PatientForm(request.POST or None, instance=editing)
 
@@ -38,25 +40,28 @@ def patient_manage_view(request, pk=None):
         return redirect("patients:manage")
 
     q = request.GET.get("q", "").strip()
-    patients = Patient.objects.search(q)
-    if q:
-        query = Q(name__icontains=q)
-        digits = digits_only(q)
-        if digits:
-            query |= Q(cpf__startswith=digits) | Q(sus__startswith=digits)
-        patients = patients.filter(query)
+    searched = bool(q)
+    patients = Patient.objects.search(q) if searched else Patient.objects.none()
+    page_obj = Paginator(patients, 25).get_page(request.GET.get("page"))
+    params = request.GET.copy()
+    params.pop("page", None)
 
     return render(request, "patients/manage.html", {
         "form": form,
         "editing": editing,
-        "patients": patients,
+        "page_obj": page_obj,
+        "querystring": params.urlencode(),
         "q": q,
+        "searched": searched,
     })
 
 
 @feature_required(Feature.PATIENTS)
 def patient_delete_view(request, pk):
     patient = get_object_or_404(Patient, pk=pk)
+
+    if _route_lock(request, patient, "excluir"):
+        return redirect("patients:manage")
 
     blockers = patient.delete_blockers()
     if blockers:
@@ -87,3 +92,13 @@ def patient_delete_view(request, pk):
         "label": str(patient),
         "cancel_url": reverse("patients:manage"),
     })
+
+def _route_lock(request, patient, action):
+    routes = routes_of_patient(patient)
+    if routes:
+        messages.error(request, blocked_message(
+            action, f"o paciente {patient.name}", routes,
+            "Para continuar, retire o paciente (ou acompanhante) em",
+        ))
+        return True
+    return False

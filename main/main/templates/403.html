@@ -1,0 +1,13 @@
+{% extends "core/base.html" %}
+
+{% block title %}Acesso negado · STHIM{% endblock %}
+
+{% block content %}
+  <section class="card card--narrow">
+    <h2 class="card__title">Acesso negado</h2>
+    <p class="confirm__text">Seu setor não tem permissão para acessar esta funcionalidade.</p>
+    <div class="form-actions">
+      <a class="btn" href="{% url 'pages:home' %}">Voltar ao início</a>
+    </div>
+  </section>
+{% endblock %}

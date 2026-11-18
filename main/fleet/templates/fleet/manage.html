@@ -1,52 +1,42 @@
 {% extends "core/base.html" %}
 
-{% block title %}Frota{% endblock %}
+{% block title %}Frota · STHIM{% endblock %}
 
 {% block content %}
-
-  <section>
-    <h2>{% if editing %}Editar veículo{% else %}Cadastro de veículos{% endif %}</h2>
-
-    {% if locked %}
-      <p>Este veículo está em uma rota ativa: só é possível alterar o status "Funcionando".</p>
-    {% endif %}
+  <section class="card">
+    <h2 class="card__title">{% if editing %}Editar veículo{% else %}Cadastro de veículos{% endif %}</h2>
 
     <form method="post">
       {% csrf_token %}
       {{ form.non_field_errors }}
-
-      {% for field in form %}
-        <div>
-          {{ field.label_tag }}
-          {{ field }}
-          {{ field.errors }}
-        </div>
-      {% endfor %}
-
-      <button type="submit">
-        {% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}
-      </button>
-      <a href="{% url 'fleet:manage' %}">Limpar</a>
+      {% include "core/_form_fields.html" with variant="form-grid--vehicle" %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">{% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}</button>
+        <a class="btn btn--ghost" href="{% url 'fleet:manage' %}">Limpar</a>
+      </div>
     </form>
   </section>
 
-  <section>
-    <h2>Gerenciamento de frota</h2>
+  <section class="card">
+    <h2 class="card__title">Gerenciamento de frota</h2>
 
     {% if vehicles %}
-      <ul>
+      <ul class="rows">
         {% for v in vehicles %}
-          <li>
-            {{ v.get_vehicle_type_display }} | {{ v.plate }} | {{ v.seats }} vagas |
-            {% if v.is_operational %}Funcionando{% else %}Inoperante{% endif %}
-            <a href="{% url 'fleet:edit' v.pk %}">Editar</a>
-            <a href="{% url 'fleet:delete' v.pk %}">Excluir</a>
+          <li class="row">
+            <span class="row__main">
+              <strong>{{ v.get_vehicle_type_display }}</strong> | {{ v.plate }} | {{ v.seats }} vagas
+              {% if v.is_operational %}<span class="badge badge--ok">Funcionando</span>{% else %}<span class="badge badge--off">Inoperante</span>{% endif %}
+            </span>
+            <span class="row__actions">
+              <a class="action" href="{% url 'fleet:edit' v.pk %}" aria-label="Editar {{ v.plate }}">Editar</a>
+              <a class="action action--danger" href="{% url 'fleet:delete' v.pk %}" aria-label="Excluir {{ v.plate }}">Excluir</a>
+            </span>
           </li>
         {% endfor %}
       </ul>
     {% else %}
-      <p>Nenhum veículo cadastrado.</p>
+      <p class="empty">Nenhum veículo cadastrado.</p>
     {% endif %}
   </section>
-
 {% endblock %}

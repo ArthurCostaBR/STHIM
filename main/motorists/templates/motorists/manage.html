@@ -1,52 +1,46 @@
 {% extends "core/base.html" %}
 
-{% block title %}Motoristas{% endblock %}
+{% block title %}Motoristas · STHIM{% endblock %}
 
 {% block content %}
-
-  <section>
-    <h2>{% if editing %}Editar motorista{% else %}Cadastro de motoristas{% endif %}</h2>
+  <section class="card">
+    <h2 class="card__title">{% if editing %}Editar motorista{% else %}Cadastro de motoristas{% endif %}</h2>
 
     <form method="post">
       {% csrf_token %}
       {{ form.non_field_errors }}
-
-      {% for field in form %}
-        <div>
-          {{ field.label_tag }}
-          {{ field }}
-          {{ field.errors }}
-        </div>
-      {% endfor %}
-
-      <button type="submit">
-        {% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}
-      </button>
-      <a href="{% url 'motorists:manage' %}">Limpar</a>
+      {% include "core/_form_fields.html" with variant="form-grid--motorist" %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">{% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}</button>
+        <a class="btn btn--ghost" href="{% url 'motorists:manage' %}">Limpar</a>
+      </div>
     </form>
   </section>
 
-  <section>
-    <h2>Gerenciamento de motoristas</h2>
+  <section class="card">
+    <h2 class="card__title">Gerenciamento de motoristas</h2>
 
-    <form method="get" action="{% url 'motorists:manage' %}">
-      <input type="search" name="q" value="{{ q }}" placeholder="Pesquisar motorista">
-      <button type="submit">Buscar</button>
+    <form method="get" class="search" action="{% url 'motorists:manage' %}">
+      <input type="search" name="q" value="{{ q }}" placeholder="Pesquisar motorista" aria-label="Pesquisar motorista">
+      <button type="submit" class="btn">Buscar</button>
     </form>
 
-    {% if motorists %}
-      <ul>
-        {% for d in motorists %}
-          <li>
-            {{ d.name }} | {{ d.cpf }}
-            <a href="{% url 'motorists:edit' d.pk %}">Editar</a>
-            <a href="{% url 'motorists:delete' d.pk %}">Excluir</a>
+    {% if not searched %}
+      <p class="empty">Pesquise por nome ou CPF para listar os motoristas.</p>
+    {% elif motorists %}
+      <ul class="rows">
+        {% for m in motorists %}
+          <li class="row">
+            <span class="row__main"><strong>{{ m.name }}</strong> | {{ m.cpf }}</span>
+            <span class="row__actions">
+              <a class="action" href="{% url 'motorists:edit' m.pk %}" aria-label="Editar {{ m.name }}">Editar</a>
+              <a class="action action--danger" href="{% url 'motorists:delete' m.pk %}" aria-label="Excluir {{ m.name }}">Excluir</a>
+            </span>
           </li>
         {% endfor %}
       </ul>
     {% else %}
-      <p>Nenhum motorista encontrado.</p>
+      <p class="empty">Nenhum motorista encontrado.</p>
     {% endif %}
   </section>
-
 {% endblock %}

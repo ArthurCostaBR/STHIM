@@ -54,13 +54,12 @@ class Route(models.Model):
     @property
     def name(self) -> str:
         return (
-            f"{self.date:%d/%m/%Y} - {self.get_region_display()} - "
-            f"{self.departure_time:%H:%M} - {self.vehicle.plate}"
+            f"{self.date:%d/%m/%Y} | {self.get_region_display()} - "
+            f"{self.departure_time:%H:%M} | {self.vehicle.plate}"
         )
 
     @property
     def capacity(self) -> int:
-        """Capacidade total da rota, calculada a partir do veículo vinculado (RF007)."""
         return self.vehicle.seats
 
     @property
@@ -113,4 +112,4 @@ class TransportRecord(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.route_date:%d/%m/%Y} - {self.name}"
+        return f"{self.route_date:%d/%m/%Y} | {self.name}"

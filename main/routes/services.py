@@ -4,6 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 from appointments.models import Appointment
 from .models import Route, TransportRecord
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -101,3 +102,15 @@ def assign_appointments(route, appointments):
         raise AssignmentConflict
     route.appointments.exclude(pk__in=ids).update(route=None)
     Appointment.objects.filter(pk__in=ids).update(route=route)
+
+def selectable_appointments(route_date, editing=None):
+    """Agendamentos que podem entrar na rota: os livres da data e os da própria rota."""
+    free = Q(route__isnull=True)
+    if editing is not None:
+        free |= Q(route=editing)
+    return (
+        Appointment.objects.filter(date=route_date)
+        .filter(free)
+        .select_related("patient")
+        .prefetch_related("companions")
+    )

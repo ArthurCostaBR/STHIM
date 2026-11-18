@@ -1,46 +1,31 @@
 {% extends "core/base.html" %}
 
-{% block title %}Impressão de planilhas{% endblock %}
+{% block title %}Impressão de planilhas · STHIM{% endblock %}
 
 {% block content %}
-
-  <section>
-    <h2>Impressão de relação de pacientes transportados</h2>
+  <section class="card">
+    <h2 class="card__title">Impressão de relação de pacientes transportados</h2>
 
     <form method="post" action="{% url 'reports:patients' %}">
       {% csrf_token %}
       {{ patients_form.non_field_errors }}
-
-      {% for field in patients_form %}
-        <div>
-          {{ field.label_tag }}
-          {{ field }}
-          {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-          {{ field.errors }}
-        </div>
-      {% endfor %}
-
-      <button type="submit">Gerar PDF</button>
+      {% include "core/_form_fields.html" with form=patients_form variant="form-grid--report" %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">Gerar PDF</button>
+      </div>
     </form>
   </section>
 
-  <section>
-    <h2>Impressão de relação de frota</h2>
+  <section class="card">
+    <h2 class="card__title">Impressão de relação de frota</h2>
 
     <form method="post" action="{% url 'reports:fleet' %}">
       {% csrf_token %}
       {{ fleet_form.non_field_errors }}
-
-      {% for field in fleet_form %}
-        <div>
-          {{ field.label_tag }}
-          {{ field }}
-          {{ field.errors }}
-        </div>
-      {% endfor %}
-
-      <button type="submit">Gerar PDF</button>
+      {% include "core/_form_fields.html" with form=fleet_form variant="form-grid--fleet-report" %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">Gerar PDF</button>
+      </div>
     </form>
   </section>
-
 {% endblock %}

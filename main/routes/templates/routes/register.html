@@ -1,75 +1,66 @@
 {% extends "core/base.html" %}
 
-{% block title %}Cadastro de rotas{% endblock %}
+{% block title %}Cadastro de rotas · STHIM{% endblock %}
 
 {% block content %}
+  <section class="card">
+    <h2 class="card__title">{% if editing %}Editar rota{% else %}Cadastro de rotas{% endif %} - seleção de pacientes</h2>
 
-  <section>
-    <h2>{% if editing %}Editar rota{% else %}Cadastro de rotas{% endif %}</h2>
-
-    <form method="get">
+    <form method="post" action="{% url 'routes:register' %}">
+      {% csrf_token %}
       {{ filters.non_field_errors }}
-      {% if not editing %}
-        <div>{{ filters.date.label_tag }} {{ filters.date }} {{ filters.date.errors }}</div>
-      {% endif %}
-      <div>{{ filters.region.label_tag }} {{ filters.region }}</div>
-      <div>{{ filters.q.label_tag }} {{ filters.q }}</div>
-      <button type="submit">{% if editing %}Filtrar{% else %}Buscar agendamentos{% endif %}</button>
-    </form>
 
-    {% if form %}
-      <form method="post" action="{{ request.get_full_path }}">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        {{ form.date }}
-        {{ form.date.errors }}
+      <div class="filters filters--wide">
+        {% include "core/_filter_field.html" with field=filters.date %}
+        {% include "core/_filter_field.html" with field=filters.time %}
+        {% include "core/_filter_field.html" with field=filters.region %}
+      </div>
 
-        <p>Data da viagem: <strong>{{ route_date|date:"d/m/Y" }}</strong></p>
+      <h3 class="card__subtitle">Pacientes agendados{% if route_date %} | {{ route_date|date:"d/m/Y" }}{% endif %}</h3>
 
-        {% if vehicle_warning %}
-          <p>O veículo atual da rota está marcado como não funcionando. Selecione outro.</p>
-        {% endif %}
-
-        {% for field in form.visible_fields %}
-          {% if field.name != "appointments" %}
-            <div>
-              {{ field.label_tag }}
-              {{ field }}
-              {{ field.errors }}
-            </div>
-          {% endif %}
-        {% endfor %}
-
-        <h3>Pacientes agendados – {{ route_date|date:"d/m/Y" }}</h3>
-        {{ form.appointments.errors }}
+      {% if not route_date %}
+        <p class="empty">Informe a data da viagem e clique em "Buscar" para listar os agendamentos.</p>
+      {% else %}
+        <p class="capacity" data-selection-counter
+           data-base-appointments="{{ hidden_count }}" data-base-people="{{ hidden_people }}"
+           aria-live="polite">
+          {{ selected_count }} agendamento{{ selected_count|pluralize }} selecionado{{ selected_count|pluralize }} |
+          {{ selected_people }} pessoa{{ selected_people|pluralize }} (com acompanhantes)
+        </p>
 
         {% if options %}
-          <ol>
+          <ul class="rows" data-selection-list>
             {% for a in options %}
               <li>
-                <label>
-                  <input type="checkbox" name="appointments" value="{{ a.pk }}"{% if a.pk in selected_ids %} checked{% endif %}>
-                  Adicionar
+                <label class="row row--select" data-people="{{ a.companions.all|length|add:1 }}">
+                  <input type="hidden" name="shown" value="{{ a.pk }}">
+                  <span class="row__num">{{ forloop.counter }}.</span>
+                  <span class="row__main">
+                    <strong>{{ a.patient.name }}</strong> | {{ a.destination }} |
+                    {{ a.appointment_time|time:"H:i" }} | {{ a.get_region_display }} |
+                    {{ a.notes|default:"sem observação" }} |
+                    {% for c in a.companions.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% empty %}sem acompanhante{% endfor %}
+                  </span>
+                  <span class="row__add">
+                    Adicionar
+                    <input type="checkbox" name="appointments" value="{{ a.pk }}"{% if a.pk in selected %} checked{% endif %}>
+                  </span>
                 </label>
-                {{ a.patient.name }} - {{ a.destination }} -
-                {{ a.appointment_time|time:"H:i" }} - {{ a.get_region_display }} -
-                {{ a.notes|default:"sem observação" }} -
-                {% if a.companions.all %}{{ a.companions.all|length }} acompanhante{{ a.companions.all|length|pluralize }}{% else %}sem acompanhante{% endif %}
               </li>
             {% endfor %}
-          </ol>
+          </ul>
         {% else %}
-          <p>Nenhum agendamento disponível para esta data.</p>
+          <p class="empty">Nenhum agendamento disponível para os filtros informados.</p>
         {% endif %}
+      {% endif %}
 
-        <button type="submit">
-          {% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}
-        </button>
-        <a href="{% url 'routes:register' %}">Limpar</a>
-      </form>
-    {% else %}
-      <p>Informe a data da viagem e clique em "Buscar agendamentos" para montar a rota.</p>
-    {% endif %}
+      <div class="form-actions">
+        <button type="submit" name="action" value="search" class="btn">Buscar</button>
+        {% if route_date %}
+          <button type="submit" name="action" value="next" class="btn btn--primary">Avançar</button>
+        {% endif %}
+        <a class="btn btn--ghost" href="{% url 'routes:reset' %}">{% if editing %}Cancelar{% else %}Limpar{% endif %}</a>
+      </div>
+    </form>
   </section>
-
 {% endblock %}
