@@ -30,7 +30,7 @@
             {{ r.departure_time|time:"H:i" }} - {{ r.vehicle.plate }} -
             {{ r.motorist.name }} - {{ r.people }}/{{ r.vehicle.seats }} vagas
             {% if not r.vehicle.is_operational %}<strong>(veículo inoperante)</strong>{% endif %}
-            {# Fase 5: link para imprimir a planilha da rota #}
+            <a href="{% url 'reports:route_sheet' r.pk %}">Imprimir</a>
             <a href="{% url 'routes:edit' r.pk %}">Editar</a>
             <a href="{% url 'routes:delete' r.pk %}">Excluir</a>
           </li>

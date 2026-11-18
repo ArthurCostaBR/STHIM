@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'audit',
     'motorists',
     'appointments',
-    'routes'
+    'routes',
+    'reports',
 ]
 
 MIDDLEWARE = [

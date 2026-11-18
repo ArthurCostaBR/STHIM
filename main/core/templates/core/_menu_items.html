@@ -53,6 +53,10 @@
   {% endif %}
   
   {% if "sheets" in features %}
-    <li><a href="#">Impressão de planilhas</a></li>
-  {% endif %}
+  <li>
+    <a href="{% url 'reports:sheets' %}"{% if request.resolver_match.app_name == 'reports' %} aria-current="page"{% endif %}>
+      Impressão de planilhas
+    </a>
+  </li>
+{% endif %}
 </ul>
