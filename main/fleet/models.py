@@ -1,6 +1,7 @@
 from .validators import min_max_validator, validate_plate
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 class VehicleType(models.TextChoices):
     CAR = "carro", "Carro"
@@ -28,7 +29,7 @@ class Vehicle(models.Model):
     is_operational = models.BooleanField("Funcionando", default=True)
 
     def is_assigned(self) -> bool:
-        return False
+        return self.routes.filter(date__gte=timezone.localdate()).exists()
 
     def __str__(self):
         return f"{self.get_vehicle_type_display()} ({self.plate})"

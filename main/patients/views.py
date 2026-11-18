@@ -10,10 +10,15 @@ from django.db import transaction
 from audit.models import AuditLog
 from audit.services import log_action
 from django.utils import timezone
+from routes.services import ensure_history
 
 @feature_required(Feature.PATIENTS)
 def patient_manage_view(request, pk=None):
     editing = get_object_or_404(Patient, pk=pk) if pk else None
+
+    if editing and request.method == "POST" and not ensure_history(request):
+        return redirect("fleet:manage")
+
     form = PatientForm(request.POST or None, instance=editing)
 
     if request.method == "POST" and form.is_valid():
@@ -61,6 +66,9 @@ def patient_delete_view(request, pk):
         return redirect("patients:manage")
 
     if request.method == "POST":
+        if not ensure_history(request):
+            return redirect("fleet:manage")
+
         try:
             with transaction.atomic():
                 log_action(request.user, AuditLog.Action.DELETE, patient)

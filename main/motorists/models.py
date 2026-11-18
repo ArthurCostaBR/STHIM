@@ -1,6 +1,7 @@
 from django.db import models
 from core.fields import CPFField
 from core.validators import phone_validator
+from django.utils import timezone
 
 class Motorists(models.Model):
     
@@ -20,4 +21,6 @@ class Motorists(models.Model):
         return f"{self.name} ({self.cpf})"
 
     def delete_blockers(self) -> list[str]:
+        if self.routes.filter(date__gte=timezone.localdate()).exists():
+            return ["está designado em uma rota ativa"]
         return []

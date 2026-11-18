@@ -6,10 +6,15 @@ from accounts.access import Feature, feature_required
 from core.normalizers import digits_only
 from .forms import MotoristsForm
 from .models import Motorists
+from routes.services import ensure_history
 
 @feature_required(Feature.MOTORISTS)
 def motorists_manage_view(request, pk=None):
     editing = get_object_or_404(Motorists, pk=pk) if pk else None
+
+    if editing and request.method == "POST" and not ensure_history(request):
+        return redirect("fleet:manage")
+    
     form = MotoristsForm(request.POST or None, instance=editing)
 
     if request.method == "POST" and form.is_valid():
@@ -49,6 +54,9 @@ def motorists_delete_view(request, pk):
         return redirect("motorists:manage")
 
     if request.method == "POST":
+        if not ensure_history(request):
+            return redirect("fleet:manage")
+        
         try:
             driver.delete()
         except ProtectedError:

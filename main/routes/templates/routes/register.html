@@ -1,0 +1,75 @@
+{% extends "core/base.html" %}
+
+{% block title %}Cadastro de rotas{% endblock %}
+
+{% block content %}
+
+  <section>
+    <h2>{% if editing %}Editar rota{% else %}Cadastro de rotas{% endif %}</h2>
+
+    <form method="get">
+      {{ filters.non_field_errors }}
+      {% if not editing %}
+        <div>{{ filters.date.label_tag }} {{ filters.date }} {{ filters.date.errors }}</div>
+      {% endif %}
+      <div>{{ filters.region.label_tag }} {{ filters.region }}</div>
+      <div>{{ filters.q.label_tag }} {{ filters.q }}</div>
+      <button type="submit">{% if editing %}Filtrar{% else %}Buscar agendamentos{% endif %}</button>
+    </form>
+
+    {% if form %}
+      <form method="post" action="{{ request.get_full_path }}">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.date }}
+        {{ form.date.errors }}
+
+        <p>Data da viagem: <strong>{{ route_date|date:"d/m/Y" }}</strong></p>
+
+        {% if vehicle_warning %}
+          <p>O veículo atual da rota está marcado como não funcionando. Selecione outro.</p>
+        {% endif %}
+
+        {% for field in form.visible_fields %}
+          {% if field.name != "appointments" %}
+            <div>
+              {{ field.label_tag }}
+              {{ field }}
+              {{ field.errors }}
+            </div>
+          {% endif %}
+        {% endfor %}
+
+        <h3>Pacientes agendados – {{ route_date|date:"d/m/Y" }}</h3>
+        {{ form.appointments.errors }}
+
+        {% if options %}
+          <ol>
+            {% for a in options %}
+              <li>
+                <label>
+                  <input type="checkbox" name="appointments" value="{{ a.pk }}"{% if a.pk in selected_ids %} checked{% endif %}>
+                  Adicionar
+                </label>
+                {{ a.patient.name }} - {{ a.destination }} -
+                {{ a.appointment_time|time:"H:i" }} - {{ a.get_region_display }} -
+                {{ a.notes|default:"sem observação" }} -
+                {% if a.companions.all %}{{ a.companions.all|length }} acompanhante{{ a.companions.all|length|pluralize }}{% else %}sem acompanhante{% endif %}
+              </li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          <p>Nenhum agendamento disponível para esta data.</p>
+        {% endif %}
+
+        <button type="submit">
+          {% if editing %}Salvar alterações{% else %}Cadastrar{% endif %}
+        </button>
+        <a href="{% url 'routes:register' %}">Limpar</a>
+      </form>
+    {% else %}
+      <p>Informe a data da viagem e clique em "Buscar agendamentos" para montar a rota.</p>
+    {% endif %}
+  </section>
+
+{% endblock %}

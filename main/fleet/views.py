@@ -5,10 +5,15 @@ from django.urls import reverse
 from accounts.access import Feature, feature_required
 from .forms import VehicleForm
 from .models import Vehicle
+from routes.services import ensure_history
 
 @feature_required(Feature.FLEET)
 def vehicle_manage_view(request, pk=None):
     editing = get_object_or_404(Vehicle, pk=pk) if pk else None
+
+    if editing and request.method == "POST" and not ensure_history(request):
+        return redirect("fleet:manage")
+
     form = VehicleForm(request.POST or None, instance=editing)
 
     if request.method == "POST" and form.is_valid():
@@ -38,6 +43,9 @@ def vehicle_delete_view(request, pk):
         return redirect("fleet:manage")
 
     if request.method == "POST":
+        if not ensure_history(request):
+            return redirect("fleet:manage")
+        
         try:
             vehicle.delete()
         except ProtectedError:

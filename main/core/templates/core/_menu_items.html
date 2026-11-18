@@ -24,8 +24,16 @@
   {% endif %}
 
   {% if "routes" in features %}
-    <li><a href="#">Cadastro de rotas</a></li>
-    <li><a href="#">Gerenciamento de rotas</a></li>
+    <li>
+      <a href="{% url 'routes:register' %}"{% if request.resolver_match.view_name == 'routes:register' or request.resolver_match.view_name == 'routes:edit' %} aria-current="page"{% endif %}>
+        Cadastro de rotas
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'routes:manage' %}"{% if request.resolver_match.view_name == 'routes:manage' %} aria-current="page"{% endif %}>
+        Gerenciamento de rotas
+      </a>
+    </li>
   {% endif %}
 
   {% if "fleet" in features %}

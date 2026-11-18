@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+
+{% block title %}Gerenciamento de rotas{% endblock %}
+
+{% block content %}
+
+  <section>
+    <h2>Gerenciamento de rotas</h2>
+
+    <form method="get" action="{% url 'routes:manage' %}">
+      {{ filters.non_field_errors }}
+      {% for field in filters %}
+        <div>
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <button type="submit">Filtrar</button>
+      <a href="{% url 'routes:manage' %}">Limpar</a>
+    </form>
+
+    <h3>Rotas agendadas</h3>
+
+    {% if page_obj %}
+      <ol start="{{ page_obj.start_index }}">
+        {% for r in page_obj %}
+          <li>
+            {{ r.date|date:"d/m/Y" }} - {{ r.get_region_display }} -
+            {{ r.departure_time|time:"H:i" }} - {{ r.vehicle.plate }} -
+            {{ r.motorist.name }} - {{ r.people }}/{{ r.vehicle.seats }} vagas
+            {% if not r.vehicle.is_operational %}<strong>(veículo inoperante)</strong>{% endif %}
+            {# Fase 5: link para imprimir a planilha da rota #}
+            <a href="{% url 'routes:edit' r.pk %}">Editar</a>
+            <a href="{% url 'routes:delete' r.pk %}">Excluir</a>
+          </li>
+        {% endfor %}
+      </ol>
+
+      <nav>
+        {% if page_obj.has_previous %}
+          <a href="?{{ querystring }}&page={{ page_obj.previous_page_number }}">Anterior</a>
+        {% endif %}
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        {% if page_obj.has_next %}
+          <a href="?{{ querystring }}&page={{ page_obj.next_page_number }}">Próxima</a>
+        {% endif %}
+      </nav>
+    {% else %}
+      <p>Nenhuma rota encontrada.</p>
+    {% endif %}
+  </section>
+
+{% endblock %}

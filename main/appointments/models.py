@@ -13,19 +13,38 @@ class AppointmentQuerySet(models.QuerySet):
             return self
         return self.filter(patient__in=Patient.objects.search(text).values("pk"))
 
+    def unassigned(self):
+        return self.filter(route__isnull=True)
+
+    def is_in_route(self) -> bool:
+        return self.route_id is not None
+
 class Appointment(models.Model):
+
     patient = models.ForeignKey(
         Patient,
         on_delete=models.PROTECT,
         related_name="appointments",
         verbose_name="Paciente",
     )
+
     companions = models.ManyToManyField(
         Patient,
         blank=True,
         related_name="companion_appointments",
         verbose_name="Acompanhantes",
     )
+
+    route = models.ForeignKey(
+        "routes.Route",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        editable=False,
+        related_name="appointments",
+        verbose_name="Rota",
+    )
+
     region = models.CharField("Região", max_length=20, choices=Region.choices)
     destination = models.CharField("Destino", max_length=150)
     boarding_place = models.CharField("Local de embarque", max_length=150)
