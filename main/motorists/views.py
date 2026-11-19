@@ -13,9 +13,12 @@ from routes.locks import blocked_message, routes_of_motorist
 def motorists_manage_view(request, pk=None):
     editing = get_object_or_404(Motorists, pk=pk) if pk else None
 
-    if editing and _route_lock(request, editing, "alterar") and request.method == "POST" and not ensure_history(request):
+    if editing and _route_lock(request, editing, "alterar"):
         return redirect("motorists:manage")
-    
+
+    if editing and request.method == "POST" and not ensure_history(request):
+        return redirect("motorists:manage")
+
     form = MotoristsForm(request.POST or None, instance=editing)
 
     if request.method == "POST" and form.is_valid():
@@ -61,7 +64,7 @@ def motorists_delete_view(request, pk):
 
     if request.method == "POST":
         if not ensure_history(request):
-            return redirect("fleet:manage")
+            return redirect("motorists:manage")
         
         try:
             driver.delete()

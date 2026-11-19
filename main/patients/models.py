@@ -88,6 +88,3 @@ class Patient(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.cpf or self.sus})"
-
-    def delete_blockers(self) -> list[str]:
-        return []

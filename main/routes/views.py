@@ -255,6 +255,8 @@ def route_manage_view(request):
         .annotate(
             people=Count("appointments", distinct=True) + Count("appointments__companions")
         )
+        # o GROUP BY do annotate descarta o Meta.ordering; a paginação precisa de ordem estável
+        .order_by("date", "departure_time", "pk")
     )
 
     if filters.is_valid():

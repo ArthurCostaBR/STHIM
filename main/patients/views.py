@@ -72,7 +72,7 @@ def patient_delete_view(request, pk):
 
     if request.method == "POST":
         if not ensure_history(request):
-            return redirect("fleet:manage")
+            return redirect("patients:manage")
 
         try:
             with transaction.atomic():
