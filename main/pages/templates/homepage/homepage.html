@@ -1,5 +1,4 @@
 {% extends "core/base.html" %}
-{% load static %}
 
 {% block title %}Início · STHIM{% endblock %}
 {% block body_class %}home-page{% endblock %}
@@ -8,7 +7,6 @@
   <div class="home">
     <section class="home__panel">
       <header class="home__brand">
-        <img class="home__logo" src="{% static 'core/img/sthim-logo.svg' %}" alt="">
         <h1>STHIM</h1>
         <p>Sistema de Transporte Hospitalar Intermunicipal</p>
       </header>
@@ -29,8 +27,6 @@
       </div>
     </section>
 
-    <aside class="home__photo" aria-hidden="true">
-      <img src="{% static 'core/img/prefeitura-saquarema.svg' %}" alt="">
-    </aside>
+    <aside class="home__photo" aria-hidden="true"></aside>
   </div>
 {% endblock %}

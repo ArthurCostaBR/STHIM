@@ -156,7 +156,6 @@ body.home-page { background: var(--bg-panel); }
 .home__brand { text-align: center; }
 .home__brand h1 { font-size: 3rem; }
 .home__brand p { margin-top: .25rem; font-size: .75rem; text-transform: uppercase; }
-.home__logo { height: 64px; }
 .home__photo {display: grid; place-items: center; background: url("../img/fundo-home.jpg") center / cover no-repeat;}
 
 /* ===== Telas pequenas ===== */
