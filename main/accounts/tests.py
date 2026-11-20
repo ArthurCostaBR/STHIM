@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
-from django.test import RequestFactory, TestCase
+from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 from accounts.access import (
     ALL_FEATURES, SECTOR_FEATURES, Feature, feature_required, features_for, has_feature,
@@ -212,10 +212,38 @@ class LoginTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("cpf", form.errors)
 
+    def test_authenticated_user_is_redirected_home(self):
+        self.client.force_login(self.user)
+        self.assertRedirects(self.client.get(self.url), reverse("pages:home"))
+        response = self.client.post(self.url, {"cpf": "52998224725", "password": PASSWORD})
+        self.assertRedirects(response, reverse("pages:home"))
+
+    def test_login_form_submits_once(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, "data-submit-once")
+
     def test_failed_post_does_not_log_in(self):
         response = self.client.post(self.url, {"cpf": "52998224725", "password": "x"})
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("_auth_user_id", self.client.session)
+
+
+class CsrfFailureTests(TestCase):
+    def setUp(self):
+        self.client = Client(enforce_csrf_checks=True)
+
+    def test_anonymous_goes_back_to_login_with_message(self):
+        response = self.client.post(
+            reverse("accounts:login"), {"cpf": "52998224725", "password": PASSWORD}, follow=True
+        )
+        self.assertRedirects(response, reverse("accounts:login"))
+        self.assertContains(response, "Sua sessão expirou, tente novamente.")
+
+    def test_authenticated_goes_home_with_message(self):
+        self.client.force_login(create_user())
+        response = self.client.post(reverse("accounts:logout"), follow=True)
+        self.assertRedirects(response, reverse("pages:home"))
+        self.assertContains(response, "O formulário expirou. Tente novamente.")
 
 
 class LogoutTests(TestCase):

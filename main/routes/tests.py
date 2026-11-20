@@ -400,6 +400,10 @@ class RouteFormTests(TestCase):
         self.assertEqual(form.cleaned_data["date"], days(1))
         self.assertIn(f"route={route.pk}", form.fields["vehicle"].widget.attrs["data-search-url"])
 
+    def test_vehicle_picker_empty_text(self):
+        attrs = RouteForm().fields["vehicle"].widget.attrs
+        self.assertEqual(attrs["data-empty-text"], "Nenhum veículo disponível encontrado.")
+
     def test_labels(self):
         vehicle = create_vehicle(vehicle_type="van", plate="ABC1234", seats=15)
         form = RouteForm()

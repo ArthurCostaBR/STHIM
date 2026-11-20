@@ -153,6 +153,8 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "pages:home"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
+CSRF_FAILURE_VIEW = "accounts.views.csrf_failure"
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/

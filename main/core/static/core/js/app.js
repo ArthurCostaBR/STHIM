@@ -33,6 +33,41 @@
     if (field && field.value && field.form) field.form.requestSubmit();
   });
 
+  // ---------- Envio único ----------
+  // Formulários com [data-submit-once] ignoram cliques repetidos enquanto a
+  // página carrega (ex.: login com o servidor "acordando"). O botão não recebe
+  // o atributo "disabled" para não tirar o valor dele dos dados enviados.
+  document.addEventListener("submit", (event) => {
+    const form = event.target.closest("[data-submit-once]");
+    if (!form || event.defaultPrevented) return;
+    if (form.dataset.submitting) {
+      event.preventDefault();
+      return;
+    }
+    form.dataset.submitting = "true";
+    $$("button[type='submit']", form).forEach((button) => {
+      button.setAttribute("aria-disabled", "true");
+      button.classList.add("is-busy");
+      if (button.dataset.loadingText) {
+        button.dataset.originalText = button.textContent;
+        button.textContent = button.dataset.loadingText;
+      }
+    });
+  });
+
+  // Ao voltar para a página pelo botão "Voltar", o navegador pode restaurá-la
+  // do cache com o botão ainda travado; libera de novo.
+  window.addEventListener("pageshow", () => {
+    $$("[data-submit-once]").forEach((form) => {
+      delete form.dataset.submitting;
+      $$("button[type='submit']", form).forEach((button) => {
+        button.removeAttribute("aria-disabled");
+        button.classList.remove("is-busy");
+        if (button.dataset.originalText) button.textContent = button.dataset.originalText;
+      });
+    });
+  });
+
   // ---------- Cadastro em etapas ----------
   function setupSteps() {
     const form = $("[data-steps]");
@@ -157,7 +192,7 @@
       active = index;
     };
 
-    const showResults = (items, emptyText = "Nenhum paciente encontrado.") => {
+    const showResults = (items, emptyText = select.dataset.emptyText || "Nenhum resultado encontrado.") => {
       results.replaceChildren();
       if (!items.length) {
         const empty = document.createElement("li");

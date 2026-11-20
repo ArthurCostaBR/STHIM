@@ -53,6 +53,7 @@ class AppointmentForm(forms.ModelForm):
                 "data-picker": "",
                 "data-search-url": search_url,
                 "data-placeholder": hint,
+                "data-empty-text": "Nenhum paciente encontrado.",
             })
 
     def _selected(self, name):

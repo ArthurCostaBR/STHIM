@@ -48,7 +48,7 @@ class RouteForm(SelectPlaceholderMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance.pk:  # os agendamentos são de um dia; a data de uma rota existente não muda
+        if self.instance.pk:
             self.fields["date"].disabled = True
 
         vehicle = self.fields["vehicle"]
@@ -58,7 +58,6 @@ class RouteForm(SelectPlaceholderMixin, forms.ModelForm):
         )
         self.fields["motorist"].label_from_instance = lambda m: m.name
 
-        # Busca de veículo com chip; a data é lida do campo de data na hora da busca
         url = reverse("routes:vehicle_search")
         if self.instance.pk:
             url += "?" + urlencode({"route": self.instance.pk})
@@ -67,6 +66,7 @@ class RouteForm(SelectPlaceholderMixin, forms.ModelForm):
             "data-search-url": url,
             "data-date-source": self["date"].id_for_label,
             "data-placeholder": "Adicionar veículo",
+            "data-empty-text": "Nenhum veículo disponível encontrado.",
         })
 
     def clean_date(self):
